@@ -7,7 +7,10 @@ vhost_region_add_section_merge(const char *name, uint64_t new_size, uint64_t gpa
 vhost_region_add_section_aligned(const char *name, uint64_t gpa, uint64_t size, uint64_t host) "%s: 0x%"PRIx64"+0x%"PRIx64" @ 0x%"PRIx64
 vhost_section(const char *name) "%s"
 vhost_reject_section(const char *name, int d) "%s:%d"
-vhost_iotlb_miss(void *dev, int step) "%p step %d"
+vhost_iotlb_miss(void *dev, uint64_t iova, bool is_write) "%p iova 0x%"PRIx64" write %d"
+vhost_iotlb_miss_failure(void *dev, uint64_t iova, bool is_write) "%p iova 0x%"PRIx64" write %d"
+vhost_iotlb_miss_success(void *dev, uint64_t iova, uint64_t uaddr, uint64_t len, bool is_write, uint32_t perm) "%p iova 0x%"PRIx64" uaddr 0x%"PRIx64" len 0x%"PRIx64" write %d perm %d"
+vhost_iotlb_invalidate(void *dev, uint64_t iova, uint64_t size) "%p iova 0x%"PRIx64" size 0x%"PRIx64
 vhost_dev_cleanup(void *dev) "%p"
 vhost_dev_start(void *dev, const char *name, bool vrings) "%p:%s vrings:%d"
 vhost_dev_stop(void *dev, const char *name, bool vrings) "%p:%s vrings:%d"
