@@ -20,6 +20,7 @@
 #include "system/dma.h"
 #include "trace.h"
 
+#include "hw/virtio/virtio-bus.h"
 #include "hw/virtio/virtio-dmatest.h"
 
 #include "standard-headers/linux/virtio_ids.h"
@@ -235,6 +236,73 @@ static void virtio_dmatest_handle_command(VirtIODevice *vdev, VirtQueue *vq)
     }
 }
 
+static const int vhost_dmatest_feature_bits[] = {
+    VIRTIO_F_NOTIFY_ON_EMPTY,
+    VIRTIO_RING_F_INDIRECT_DESC,
+    VIRTIO_RING_F_EVENT_IDX,
+    VIRTIO_F_VERSION_1,
+    VIRTIO_F_IOMMU_PLATFORM,
+    VHOST_INVALID_FEATURE_BIT
+};
+
+static void vhost_dmatest_init(VirtIODMATest *dmate, Error **errp)
+{
+    int i, fd, ret;
+    VhostDMATest *dmate_vhost;
+
+    if (!dmate->use_vhost) {
+        return;
+    }
+
+    dmate_vhost = g_new0(VhostDMATest, 1);
+    dmate_vhost->queues = g_new0(VhostDMATestQueue, dmate->num_queues);
+
+    for (i = 0; i < dmate->num_queues; i++) {
+        VhostDMATestQueue *q = &dmate_vhost->queues[i];
+
+        fd = open("/dev/vhost-dmatest", O_RDWR);
+        if (fd < 0) {
+            error_setg_errno(errp, errno, "while opening /dev/vhost-dmatest");
+            return;
+        }
+
+        if (!g_unix_set_fd_nonblocking(fd, true, NULL)) {
+            error_setg_errno(errp, errno, "Failed to set FD nonblocking");
+            return;
+        }
+
+        q->dev.nvqs = 1;
+        q->dev.vqs = g_malloc0(sizeof(*q->dev.vqs));
+
+        q->fd = fd;
+        ret = vhost_dev_init(&q->dev, (void *)(uintptr_t)fd,
+                             VHOST_BACKEND_TYPE_KERNEL, 0, errp);
+        if (ret) {
+            error_setg(errp, "cannot init vhost dev");
+            return;
+        }
+    }
+
+    dmate->vhost = dmate_vhost;
+}
+
+static void vhost_dmatest_cleanup(VirtIODMATest *dmate)
+{
+    int i;
+
+    if (!dmate->vhost) {
+        return;
+    }
+
+    for (i = 0; i < dmate->num_queues; i++) {
+        vhost_dev_cleanup(&dmate->vhost->queues[i].dev);
+    }
+
+    g_free(dmate->vhost->queues);
+    g_free(dmate->vhost);
+    dmate->vhost = NULL;
+}
+
 static void virtio_dmatest_device_realize(DeviceState *dev, Error **errp)
 {
     int i;
@@ -278,6 +346,8 @@ static void virtio_dmatest_device_unrealize(DeviceState *dev)
     int i;
     VirtIODMATest *dmate = VIRTIO_DMATEST(dev);
 
+    vhost_dmatest_cleanup(dmate);
+
     for (i = 0; i < dmate->num_queues; i++) {
         virtio_delete_queue(dmate->job_vqs[i]);
     }
@@ -301,12 +371,186 @@ static uint64_t virtio_dmatest_get_features(VirtIODevice *vdev, uint64_t f,
 {
     VirtIODMATest *dmate = VIRTIO_DMATEST(vdev);
 
-    return dmate->features | f;
+    f |= dmate->features;
+
+    if (dmate->vhost) {
+        /* All queues have the same feature set */
+        assert(dmate->num_queues > 0);
+        f = vhost_get_features(&dmate->vhost->queues[0].dev,
+                               vhost_dmatest_feature_bits, f);
+    }
+    return f;
+}
+
+static void virtio_dmatest_set_features(VirtIODevice *vdev, uint64_t features)
+{
+    int i;
+    VirtIODMATest *dmate = VIRTIO_DMATEST(vdev);
+
+    if (!dmate->vhost) {
+        return;
+    }
+
+    for (i = 0; i < dmate->num_queues; i++) {
+        vhost_ack_features(&dmate->vhost->queues[i].dev,
+                           vhost_dmatest_feature_bits, features);
+    }
+}
+
+static int vhost_dmatest_start(VirtIODMATest *dmate)
+{
+    int i;
+    int ret;
+    uint16_t nqueues = dmate->num_queues;
+    BusState *qbus = BUS(qdev_get_parent_bus(DEVICE(dmate)));
+    VirtioBusState *vbus = VIRTIO_BUS(qbus);
+    VirtioBusClass *k = VIRTIO_BUS_GET_CLASS(vbus);
+    VirtIODevice *vdev = VIRTIO_DEVICE(dmate);
+
+    if (!k->set_guest_notifiers) {
+        error_report("binding does not support guest notifiers");
+        return -ENOSYS;
+    }
+
+    for (i = 0; i < nqueues; i++) {
+        dmate->vhost->queues[i].dev.vq_index = i;
+        dmate->vhost->queues[i].dev.vq_index_end = nqueues;
+    }
+
+    ret = k->set_guest_notifiers(qbus->parent, nqueues, true);
+    if (ret < 0) {
+        error_report("Error binding guest notifier: %d", -ret);
+        return ret;
+    }
+
+    for (i = 0; i < nqueues; i++) {
+        ret = vhost_dev_enable_notifiers(&dmate->vhost->queues[i].dev, vdev);
+        if (ret) {
+            goto err_clear_notifiers;
+        }
+
+        ret = vhost_dev_start(&dmate->vhost->queues[i].dev, vdev, false);
+        if (ret) {
+            vhost_dev_disable_notifiers(&dmate->vhost->queues[i].dev, vdev);
+            goto err_disable;
+        }
+    }
+
+    return 0;
+
+err_disable:
+    for (--i; i >= 0; --i) {
+            vhost_dev_disable_notifiers(&dmate->vhost->queues[i].dev, vdev);
+            vhost_dev_stop(&dmate->vhost->queues[i].dev, vdev, true);
+    }
+err_clear_notifiers:
+    k->set_guest_notifiers(qbus->parent, nqueues, false);
+    return ret;
+}
+
+static int vhost_dmatest_stop(VirtIODMATest *dmate)
+{
+    int i;
+    BusState *qbus = BUS(qdev_get_parent_bus(DEVICE(dmate)));
+    VirtioBusState *vbus = VIRTIO_BUS(qbus);
+    VirtioBusClass *k = VIRTIO_BUS_GET_CLASS(vbus);
+    VirtIODevice *vdev = VIRTIO_DEVICE(dmate);
+
+    for (i = 0; i < dmate->num_queues; i++) {
+            vhost_dev_disable_notifiers(&dmate->vhost->queues[i].dev, vdev);
+            vhost_dev_stop(&dmate->vhost->queues[i].dev, vdev, true);
+    }
+    k->set_guest_notifiers(qbus->parent, dmate->num_queues, false);
+    return 0;
+}
+
+static int vhost_dmatest_set_status(struct VirtIODMATest *dmate, uint8_t status)
+{
+    int i, ret;
+
+    for (i = 0; i < dmate->num_queues; i++) {
+        struct vhost_dev *hdev = &dmate->vhost->queues[i].dev;
+
+        if (hdev->vhost_ops->vhost_set_status) {
+            ret = hdev->vhost_ops->vhost_set_status(hdev, status);
+            if (ret) {
+                error_report("Failed to set status: %d", ret);
+            }
+        }
+    }
+    return 0;
 }
 
 static int virtio_dmatest_set_status(VirtIODevice *vdev, uint8_t status)
 {
+    VirtIODMATest *dmate = VIRTIO_DMATEST(vdev);
+    bool started = status & VIRTIO_CONFIG_S_DRIVER_OK;
+
+    if (!dmate->vhost) {
+        return 0;
+    }
+
+    if (dmate->vhost->started == started) {
+        return 0;
+    }
+
+    if (!dmate->vhost->started) {
+        int ret = vhost_dmatest_start(dmate);
+        if (ret < 0) {
+            vhost_dmatest_set_status(dmate, status & ~VIRTIO_CONFIG_S_DRIVER_OK);
+            error_report("unable to start vhost dmatest: %d",  -ret);
+            return ret;
+        }
+    } else {
+        vhost_dmatest_stop(dmate);
+    }
+
+    int ret = vhost_dmatest_set_status(dmate, status);
+    if (ret) {
+        return ret;
+    }
+
+    dmate->vhost->started = started;
     return 0;
+}
+
+static void virtio_dmatest_guest_notifier_mask(VirtIODevice *vdev, int idx,
+                                               bool mask)
+{
+    VirtIODMATest *dmate = VIRTIO_DMATEST(vdev);
+
+    if (idx == VIRTIO_CONFIG_IRQ_IDX) {
+        /* FIXME! */
+        error_report("%s: unhandled", __func__);
+        /* vhost_config_mask(&net->dev, dev, mask); */
+        return;
+    }
+
+    if (idx >= dmate->num_queues) {
+        qemu_log_mask(LOG_GUEST_ERROR,
+                      "%s: bogus vq index ignored\n", __func__);
+        return;
+    }
+    vhost_virtqueue_mask(&dmate->vhost->queues[idx].dev, vdev, idx, mask);
+}
+
+static bool virtio_dmatest_guest_notifier_pending(VirtIODevice *vdev, int idx)
+{
+    VirtIODMATest *dmate = VIRTIO_DMATEST(vdev);
+
+    if (idx == VIRTIO_CONFIG_IRQ_IDX) {
+        /* FIXME! */
+        error_report("%s: unhandled", __func__);
+        /* vhost_config_mask(&net->dev, dev, mask); */
+        return false;
+    }
+
+    if (idx >= dmate->num_queues) {
+        qemu_log_mask(LOG_GUEST_ERROR,
+                      "%s: bogus vq index ignored\n", __func__);
+        return false;
+    }
+    return vhost_virtqueue_pending(&dmate->vhost->queues[idx].dev, idx);
 }
 
 static void virtio_dmatest_instance_init(Object *obj)
@@ -315,6 +559,7 @@ static void virtio_dmatest_instance_init(Object *obj)
 
 static const Property virtio_dmatest_properties[] = {
     DEFINE_PROP_UINT16("num-queues", VirtIODMATest, num_queues, 1),
+    DEFINE_PROP_BOOL("vhost", VirtIODMATest, use_vhost, false),
 };
 
 static void virtio_dmatest_class_init(ObjectClass *klass, const void *data)
@@ -330,7 +575,11 @@ static void virtio_dmatest_class_init(ObjectClass *klass, const void *data)
     vdc->reset = virtio_dmatest_device_reset;
     vdc->get_config = virtio_dmatest_get_config;
     vdc->get_features = virtio_dmatest_get_features;
+    vdc->set_features = virtio_dmatest_set_features;
     vdc->set_status = virtio_dmatest_set_status;
+    vdc->guest_notifier_mask = virtio_dmatest_guest_notifier_mask;
+    vdc->guest_notifier_pending = virtio_dmatest_guest_notifier_pending;
+    vdc->toggle_device_iotlb = vhost_toggle_device_iotlb;
 }
 
 static const TypeInfo virtio_dmatest_info = {
