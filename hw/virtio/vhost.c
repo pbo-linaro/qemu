@@ -864,6 +864,7 @@ static void vhost_iommu_unmap_notify(IOMMUNotifier *n, IOMMUTLBEntry *iotlb)
     struct vhost_dev *hdev = iommu->hdev;
     hwaddr iova = iotlb->iova + iommu->iommu_offset;
 
+    trace_vhost_iotlb_invalidate(hdev, iova, iotlb->addr_mask + 1);
     if (vhost_backend_invalidate_device_iotlb(hdev, iova,
                                               iotlb->addr_mask + 1)) {
         error_report("Fail to invalidate device iotlb");
@@ -1214,7 +1215,7 @@ int vhost_device_iotlb_miss(struct vhost_dev *dev, uint64_t iova, int write)
 
     RCU_READ_LOCK_GUARD();
 
-    trace_vhost_iotlb_miss(dev, 1);
+    trace_vhost_iotlb_miss(dev, iova, write);
 
     iotlb = address_space_get_iotlb_entry(dev->vdev->dma_as,
                                           iova, write,
@@ -1223,7 +1224,7 @@ int vhost_device_iotlb_miss(struct vhost_dev *dev, uint64_t iova, int write)
         ret = vhost_memory_region_lookup(dev, iotlb.translated_addr,
                                          &uaddr, &len);
         if (ret) {
-            trace_vhost_iotlb_miss(dev, 3);
+            trace_vhost_iotlb_miss_failure(dev, iova, write);
             error_report("Fail to lookup the translated address "
                          "%"PRIx64, iotlb.translated_addr);
             goto out;
@@ -1235,13 +1236,15 @@ int vhost_device_iotlb_miss(struct vhost_dev *dev, uint64_t iova, int write)
         ret = vhost_backend_update_device_iotlb(dev, iova, uaddr,
                                                 len, iotlb.perm);
         if (ret) {
-            trace_vhost_iotlb_miss(dev, 4);
+            trace_vhost_iotlb_miss_failure(dev, iova, write);
             error_report("Fail to update device iotlb");
             goto out;
         }
+
+        trace_vhost_iotlb_miss_success(dev, iova, uaddr, len, write,
+                                       iotlb.perm);
     }
 
-    trace_vhost_iotlb_miss(dev, 2);
 
 out:
     return ret;
