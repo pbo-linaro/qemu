@@ -316,6 +316,11 @@ static void vhost_kernel_set_iotlb_callback(struct vhost_dev *dev,
         qemu_set_fd_handler((uintptr_t)dev->opaque, NULL, NULL, NULL);
 }
 
+static int vhost_kernel_set_status(struct vhost_dev *dev, uint8_t status)
+{
+    return vhost_kernel_call(dev, VHOST_SET_STATUS, &status);
+}
+
 const VhostOps kernel_ops = {
         .backend_type = VHOST_BACKEND_TYPE_KERNEL,
         .vhost_backend_init = vhost_kernel_init,
@@ -327,6 +332,7 @@ const VhostOps kernel_ops = {
         .vhost_scsi_get_abi_version = vhost_kernel_scsi_get_abi_version,
         .vhost_set_log_base = vhost_kernel_set_log_base,
         .vhost_set_mem_table = vhost_kernel_set_mem_table,
+        .vhost_set_status = vhost_kernel_set_status,
         .vhost_set_vring_addr = vhost_kernel_set_vring_addr,
         .vhost_set_vring_endian = vhost_kernel_set_vring_endian,
         .vhost_set_vring_num = vhost_kernel_set_vring_num,
