@@ -158,3 +158,8 @@ virtio_pmem_flush_done(int type) "fsync return=%d"
 virtio_gpio_start(void) "start"
 virtio_gpio_stop(void) "stop"
 virtio_gpio_set_status(uint8_t status) "0x%x"
+
+# virtio-dmatest.c
+virtio_dmatest_handle_enter(uint32_t job) "0x%x"
+virtio_dmatest_handle_exit(uint32_t job) "0x%x"
+virtio_dmatest_notified(uint32_t job) "0x%x"
