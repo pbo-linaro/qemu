@@ -69,6 +69,9 @@
 #define VIRTIO_ID_BT			40 /* virtio bluetooth */
 #define VIRTIO_ID_GPIO			41 /* virtio gpio */
 
+/* Linux doesn't support 65535 for virtio-pci, max is 0x7f - 0x40 = 63 */
+#define VIRTIO_ID_DMATEST		62 /* Temporary */
+
 /*
  * Virtio Transitional IDs
  */
