@@ -261,6 +261,16 @@ static void virtio_dmatest_device_realize(DeviceState *dev, Error **errp)
     virtio_add_feature(&dmate->features, VIRTIO_RING_F_EVENT_IDX);
     virtio_add_feature(&dmate->features, VIRTIO_RING_F_INDIRECT_DESC);
     virtio_add_feature(&dmate->features, VIRTIO_F_VERSION_1);
+
+    /*
+     * FIXME: how to make sure that when an IOMMU is present, iommu_platform is
+     * enabled?  Currently this isn't enforced and the device is unusable.
+     */
+    if (!object_property_get_bool(OBJECT(vdev), "iommu_platform", errp)) {
+        warn_report("iommu_platform should be enabled for DMA test");
+    }
+
+    vhost_dmatest_init(dmate, errp);
 }
 
 static void virtio_dmatest_device_unrealize(DeviceState *dev)
