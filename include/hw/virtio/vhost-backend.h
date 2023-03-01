@@ -151,6 +151,8 @@ typedef int (*vhost_set_config_call_op)(struct vhost_dev *dev,
 
 typedef void (*vhost_reset_status_op)(struct vhost_dev *dev);
 
+typedef int (*vhost_set_status_op)(struct vhost_dev *dev, uint8_t status);
+
 typedef bool (*vhost_supports_device_state_op)(struct vhost_dev *dev);
 typedef int (*vhost_set_device_state_fd_op)(struct vhost_dev *dev,
                                             VhostDeviceStateDirection direction,
@@ -173,6 +175,7 @@ typedef struct VhostOps {
     vhost_scsi_get_abi_version_op vhost_scsi_get_abi_version;
     vhost_set_log_base_op vhost_set_log_base;
     vhost_set_mem_table_op vhost_set_mem_table;
+    vhost_set_status_op vhost_set_status;
     vhost_set_vring_addr_op vhost_set_vring_addr;
     vhost_set_vring_endian_op vhost_set_vring_endian;
     vhost_set_vring_num_op vhost_set_vring_num;
