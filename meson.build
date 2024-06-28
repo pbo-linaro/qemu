@@ -3944,7 +3944,8 @@ foreach target : target_dirs
         input: copy,
         dependencies: arch_deps + lib_deps,
         output: 'bindings-' + target + '.rs',
-        include_directories: include_directories('.', 'include'),
+        include_directories: include_directories('.', 'include',
+        'llvm/lib/clang/18/include/'),
         args: [
           '--ctypes-prefix', 'core::ffi',
           '--formatter', 'rustfmt',
@@ -3958,7 +3959,10 @@ foreach target : target_dirs
           '--with-derive-default',
           '--allowlist-file', meson.project_source_root() + '/include/.*',
           '--allowlist-file', meson.project_source_root() + '/.*',
-          '--allowlist-file', meson.project_build_root() + '/.*'
+          '--allowlist-file', meson.project_build_root() + '/.*',
+        ],
+        c_args: [
+          '--target=x86_64-pc-windows-gnu'
         ],
       )
 
@@ -3973,7 +3977,12 @@ foreach target : target_dirs
           rust_dep = declare_dependency(link_args: [
                                           '-Wl,--whole-archive',
                                           t['output'],
-                                          '-Wl,--no-whole-archive'
+                                          '-Wl,--no-whole-archive',
+                                          '-lkernel32',
+                                          '-ladvapi32',
+                                          '-lntdll',
+                                          '-luserenv',
+                                          '-lws2_32',
                                           ],
                                           sources: [rust_device_cargo_build])
           rust_hw.add(rust_dep)
