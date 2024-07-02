@@ -2,7 +2,7 @@
 rust_supported_oses = {
   'linux': '-unknown-linux-gnu',
   # 'darwin': '-apple-darwin',
-  # 'windows': '-pc-windows-gnu'
+  'windows': '-pc-windows-gnu'
 }
 rust_supported_cpus = ['x86_64', 'aarch64']
 
