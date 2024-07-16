@@ -1,6 +1,7 @@
 project('qemu', ['c'], meson_version: '>=0.63.0',
         default_options: ['warning_level=1', 'c_std=gnu11', 'cpp_std=gnu++11', 'b_colorout=auto',
-                          'b_staticpic=false', 'stdsplit=false', 'optimization=2', 'b_pie=true'],
+                          'b_staticpic=false', 'stdsplit=false', 'optimization=2', 'b_pie=true',
+                          'rust_std=2021'],
         version: files('VERSION'))
 
 add_test_setup('quick', exclude_suites: ['slow', 'thorough'], is_default: true)
@@ -295,10 +296,6 @@ if get_option('with_rust').allowed()
   cargo = find_program('cargo', required: get_option('with_rust'))
 endif
 with_rust = cargo.found()
-
-if with_rust
-  subdir('rust')
-endif
 
 # default flags for all hosts
 # We use -fwrapv to tell the compiler that we require a C dialect where
@@ -622,6 +619,9 @@ qemu_common_flags += cc.get_supported_arguments(hardening_flags)
 
 add_global_arguments(qemu_common_flags, native: false, language: all_languages)
 add_global_link_arguments(qemu_ldflags, native: false, language: all_languages)
+
+add_global_arguments(['--cfg', 'wrap_proc_macro', '--cfg', 'use_fallback',
+                      '-A', 'non-fmt-panics', '--extern', 'proc_macro_error'], language: 'rust')
 
 # Collect warning flags we want to set, sorted alphabetically
 warn_flags = [
@@ -2121,6 +2121,11 @@ if not get_option('libdw').auto() or \
                        method: 'pkg-config',
                        required: get_option('libdw'))
 endif
+
+if with_rust
+  subdir('rust')
+endif
+
 
 #################
 # config-host.h #
