@@ -63,5 +63,4 @@ if [ ! -f .configured ]; then
     touch .configured
 fi
 ninja -k0
-make -B -C contrib/plugins/ > /dev/null
 popd
