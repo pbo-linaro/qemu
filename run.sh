@@ -22,4 +22,5 @@ podman run -it \
     -e CCACHE_DIR=$HOME/.cache/ccache \
     -v $HOME/.cache/ccache/:$HOME/.cache/ccache/ \
     -v $(pwd):$(pwd) -v $(pwd)/build_$arch:$(pwd)/build -w $(pwd)\
+    -v /:/host \
     $image "$@"
