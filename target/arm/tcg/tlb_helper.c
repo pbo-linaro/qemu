@@ -12,6 +12,8 @@
 #include "exec/exec-all.h"
 #include "exec/helper-proto.h"
 
+#include <stdlib.h>
+
 
 /*
  * Returns true if the stage 1 translation regime is using LPAE format page
@@ -318,10 +320,21 @@ void arm_cpu_do_transaction_failed(CPUState *cs, hwaddr physaddr,
     arm_deliver_fault(cpu, addr, access_type, mmu_idx, &fi);
 }
 
+static uint64_t arm_cpu_tlb_fill_count;
+
+static void print_arm_cpu_tlb_fill_count(void)
+{
+    fprintf(stderr, "cpu_tlb_fill: %"PRIu64"\n", arm_cpu_tlb_fill_count);
+}
+
 bool arm_cpu_tlb_fill(CPUState *cs, vaddr address, int size,
                       MMUAccessType access_type, int mmu_idx,
                       bool probe, uintptr_t retaddr)
 {
+    if (!arm_cpu_tlb_fill_count) {
+        atexit(print_arm_cpu_tlb_fill_count);
+    }
+    ++arm_cpu_tlb_fill_count;
     ARMCPU *cpu = ARM_CPU(cs);
     GetPhysAddrResult res = {};
     ARMMMUFaultInfo local_fi, *fi;

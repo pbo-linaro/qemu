@@ -592,10 +592,21 @@ static bool get_physical_address(CPUX86State *env, vaddr addr,
     return true;
 }
 
+static uint64_t x86_cpu_tlb_fill_count;
+
+static void print_x86_cpu_tlb_fill_count(void)
+{
+    fprintf(stderr, "cpu_tlb_fill: %"PRIu64"\n", x86_cpu_tlb_fill_count);
+}
+
 bool x86_cpu_tlb_fill(CPUState *cs, vaddr addr, int size,
                       MMUAccessType access_type, int mmu_idx,
                       bool probe, uintptr_t retaddr)
 {
+    if (!x86_cpu_tlb_fill_count) {
+        atexit(print_x86_cpu_tlb_fill_count);
+    }
+    ++x86_cpu_tlb_fill_count;
     CPUX86State *env = cpu_env(cs);
     TranslateResult out;
     TranslateFault err;
