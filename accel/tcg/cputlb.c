@@ -504,9 +504,11 @@ static void tlb_flush_vtlb_page_mask_locked(CPUState *cpu, int mmu_idx,
     }
 }
 
+STATS(flush_page)
 static inline void tlb_flush_vtlb_page_locked(CPUState *cpu, int mmu_idx,
                                               vaddr page)
 {
+    STATS_COUNT(flush_page);
     tlb_flush_vtlb_page_mask_locked(cpu, mmu_idx, page, -1);
 }
 
@@ -671,10 +673,12 @@ void tlb_flush_page_all_cpus_synced(CPUState *src, vaddr addr)
     tlb_flush_page_by_mmuidx_all_cpus_synced(src, addr, ALL_MMUIDX_BITS);
 }
 
+STATS(flush_range)
 static void tlb_flush_range_locked(CPUState *cpu, int midx,
                                    vaddr addr, vaddr len,
                                    unsigned bits)
 {
+    STATS_COUNT(flush_range);
     CPUTLBDesc *d = &cpu->neg.tlb.d[midx];
     CPUTLBDescFast *f = &cpu->neg.tlb.f[midx];
     vaddr mask = MAKE_64BIT_MASK(0, bits);
