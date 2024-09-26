@@ -390,6 +390,13 @@ static inline bool check_for_breakpoints(CPUState *cpu, vaddr pc,
         check_for_breakpoints_slow(cpu, pc, cflags);
 }
 
+static uint64_t lookup_tb_counter = 0;
+__attribute__((destructor))
+static void dump_lookup_tb_counter (void)
+{
+    printf("lookup_tb_ptr: %" PRIu64 "\n", lookup_tb_counter);
+}
+
 /**
  * helper_lookup_tb_ptr: quick check for next tb
  * @env: current cpu state
@@ -400,6 +407,7 @@ static inline bool check_for_breakpoints(CPUState *cpu, vaddr pc,
  */
 const void *HELPER(lookup_tb_ptr)(CPUArchState *env)
 {
+    ++lookup_tb_counter;
     CPUState *cpu = env_cpu(env);
     TranslationBlock *tb;
     vaddr pc;
