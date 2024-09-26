@@ -2366,9 +2366,18 @@ static uint32_t do_ld4_mmu(CPUState *cpu, vaddr addr, MemOpIdx oi,
     return ret;
 }
 
+static uint64_t ld8_counter = 0;
+__attribute__((destructor))
+static void dump_ld8_counter (void)
+{
+    printf("ld8_mmu: %" PRIu64 "\n", ld8_counter);
+}
+
 static uint64_t do_ld8_mmu(CPUState *cpu, vaddr addr, MemOpIdx oi,
                            uintptr_t ra, MMUAccessType access_type)
 {
+    ++ld8_counter;
+
     MMULookupLocals l;
     bool crosspage;
     uint64_t ret;
