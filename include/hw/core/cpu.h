@@ -200,6 +200,17 @@ struct CPUClass {
 /* Use a fully associative victim tlb of 8 entries. */
 #define CPU_VTLB_SIZE 8
 
+#define STATS(name) \
+static uint64_t stats_##name = 0; \
+__attribute__((destructor)) \
+static void stats_dump_##name (void) \
+{ \
+    printf(#name": %" PRIu64 "\n", stats_##name); \
+}
+#define STATS_COUNT(name) \
+++stats_##name
+
+
 /*
  * The full TLB entry, which is not accessed by generated TCG code,
  * so the layout is not as critical as that of CPUTLBEntry. This is

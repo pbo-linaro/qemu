@@ -485,11 +485,14 @@ static inline bool tlb_flush_entry_locked(CPUTLBEntry *tlb_entry, vaddr page)
     return tlb_flush_entry_mask_locked(tlb_entry, page, -1);
 }
 
+STATS(flush_vtlb)
+
 /* Called with tlb_c.lock held */
 static void tlb_flush_vtlb_page_mask_locked(CPUState *cpu, int mmu_idx,
                                             vaddr page,
                                             vaddr mask)
 {
+    STATS_COUNT(flush_vtlb);
     CPUTLBDesc *d = &cpu->neg.tlb.d[mmu_idx];
     int k;
 
