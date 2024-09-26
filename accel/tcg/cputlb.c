@@ -540,6 +540,7 @@ static void tlb_flush_page_locked(CPUState *cpu, int midx, vaddr page)
  * Helper for tlb_flush_page_by_mmuidx and friends, flush one page
  * at @addr from the tlbs indicated by @idxmap from @cpu.
  */
+STATS(flush_page_by_mmuidx_async_0)
 static void tlb_flush_page_by_mmuidx_async_0(CPUState *cpu,
                                              vaddr addr,
                                              uint16_t idxmap)
@@ -550,6 +551,7 @@ static void tlb_flush_page_by_mmuidx_async_0(CPUState *cpu,
 
     tlb_debug("page addr: %016" VADDR_PRIx " mmu_map:0x%x\n", addr, idxmap);
 
+    STATS_COUNT(flush_page_by_mmuidx_async_0);
     qemu_spin_lock(&cpu->neg.tlb.c.lock);
     for (mmu_idx = 0; mmu_idx < NB_MMU_MODES; mmu_idx++) {
         if ((idxmap >> mmu_idx) & 1) {
