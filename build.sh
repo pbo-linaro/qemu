@@ -37,6 +37,11 @@ if [ ! -f .configured ]; then
         configure_flags=""
         export CFLAGS="-O2 -g -fno-omit-frame-pointer"
         ;;
+    opt-gcov)
+        configure_flags=""
+        export CFLAGS="-O2 -g -fno-omit-frame-pointer --coverage"
+        export LDFLAGS="--coverage"
+        ;;
     debug)
         configure_flags="--enable-debug -Dasan=true -Dubsan=true"
         ;;
