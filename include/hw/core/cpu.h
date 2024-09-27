@@ -205,7 +205,7 @@ static uint64_t stats_##name = 0; \
 __attribute__((destructor)) \
 static void stats_dump_##name (void) \
 { \
-    printf(#name": %" PRIu64 "\n", stats_##name); \
+    fprintf(stderr, #name": %" PRIu64 "\n", stats_##name); \
 }
 #define STATS_COUNT(name) \
 ++stats_##name
