@@ -1344,6 +1344,11 @@ static void notdirty_write(CPUState *cpu, vaddr mem_vaddr, unsigned size,
     }
 }
 
+
+STATS(probe_access_internal);
+STATS(probe_access_internal_not_tlb_hit_page);
+STATS(probe_access_internal_not_victim_tlb_hit);
+
 static int probe_access_internal(CPUState *cpu, vaddr addr,
                                  int fault_size, MMUAccessType access_type,
                                  int mmu_idx, bool nonfault,
@@ -1358,8 +1363,11 @@ static int probe_access_internal(CPUState *cpu, vaddr addr,
     bool force_mmio = check_mem_cbs && cpu_plugin_mem_cbs_enabled(cpu);
     CPUTLBEntryFull *full;
 
+    STATS_COUNT(probe_access_internal);
     if (!tlb_hit_page(tlb_addr, page_addr)) {
+        STATS_COUNT(probe_access_internal_not_tlb_hit_page);
         if (!victim_tlb_hit(cpu, mmu_idx, index, access_type, page_addr)) {
+            STATS_COUNT(probe_access_internal_not_victim_tlb_hit);
             if (!cpu->cc->tcg_ops->tlb_fill(cpu, addr, fault_size, access_type,
                                             mmu_idx, nonfault, retaddr)) {
                 /* Non-faulting page table read failed.  */
@@ -1612,6 +1620,10 @@ typedef struct MMULookupLocals {
     int mmu_idx;
 } MMULookupLocals;
 
+STATS(mmu_lookup1);
+STATS(mmu_lookup1_not_tlb_hit_page);
+STATS(mmu_lookup1_not_victim_tlb_hit);
+
 /**
  * mmu_lookup1: translate one page
  * @cpu: generic cpu state
@@ -1636,10 +1648,13 @@ static bool mmu_lookup1(CPUState *cpu, MMULookupPageData *data,
     CPUTLBEntryFull *full;
     int flags;
 
+    STATS_COUNT(mmu_lookup1);
     /* If the TLB entry is for a different page, reload and try again.  */
     if (!tlb_hit(tlb_addr, addr)) {
+        STATS_COUNT(mmu_lookup1_not_tlb_hit_page);
         if (!victim_tlb_hit(cpu, mmu_idx, index, access_type,
                             addr & TARGET_PAGE_MASK)) {
+            STATS_COUNT(mmu_lookup1_not_victim_tlb_hit);
             tlb_fill(cpu, addr, data->size, access_type, mmu_idx, ra);
             maybe_resized = true;
             index = tlb_index(cpu, mmu_idx, addr);
@@ -1797,6 +1812,9 @@ static bool mmu_lookup(CPUState *cpu, vaddr addr, MemOpIdx oi,
     return crosspage;
 }
 
+STATS(atomic_mmu_lookup)
+STATS(atomic_mmu_lookup_not_tlb_hit_page)
+STATS(atomic_mmu_lookup_not_victim_tlb_hit)
 /*
  * Probe for an atomic operation.  Do not allow unaligned operations,
  * or io operations to proceed.  Return the host address.
@@ -1817,6 +1835,8 @@ static void *atomic_mmu_lookup(CPUState *cpu, vaddr addr, MemOpIdx oi,
 
     /* Adjust the given return address.  */
     retaddr -= GETPC_ADJ;
+
+    STATS_COUNT(atomic_mmu_lookup);
 
     /* Enforce guest required alignment.  */
     if (unlikely(a_bits > 0 && (addr & ((1 << a_bits) - 1)))) {
@@ -1840,8 +1860,10 @@ static void *atomic_mmu_lookup(CPUState *cpu, vaddr addr, MemOpIdx oi,
     /* Check TLB entry and enforce page permissions.  */
     tlb_addr = tlb_addr_write(tlbe);
     if (!tlb_hit(tlb_addr, addr)) {
+        STATS_COUNT(atomic_mmu_lookup_not_tlb_hit_page);
         if (!victim_tlb_hit(cpu, mmu_idx, index, MMU_DATA_STORE,
                             addr & TARGET_PAGE_MASK)) {
+            STATS_COUNT(atomic_mmu_lookup_not_victim_tlb_hit);
             tlb_fill(cpu, addr, size,
                      MMU_DATA_STORE, mmu_idx, retaddr);
             index = tlb_index(cpu, mmu_idx, addr);
