@@ -24,3 +24,6 @@ store_atom2_fallback(uint32_t memop, uintptr_t ra) "mop:0x%"PRIx32", ra:%"PRIxPT
 store_atom4_fallback(uint32_t memop, uintptr_t ra) "mop:0x%"PRIx32", ra:%"PRIxPTR""
 store_atom8_fallback(uint32_t memop, uintptr_t ra) "mop:0x%"PRIx32", ra:%"PRIxPTR""
 store_atom16_fallback(uint32_t memop, uintptr_t ra) "mop:0x%"PRIx32", ra:%"PRIxPTR""
+
+# tlb_flush
+tlb_flush(const char *caller) "caller: %s"

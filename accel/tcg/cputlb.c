@@ -31,6 +31,7 @@
 #include "exec/mmu-access-type.h"
 #include "exec/tlb-common.h"
 #include "exec/vaddr.h"
+#include <execinfo.h>
 #include "tcg/tcg.h"
 #include "qemu/error-report.h"
 #include "exec/log.h"
@@ -425,6 +426,13 @@ void tlb_flush_by_mmuidx(CPUState *cpu, uint16_t idxmap)
 
 void tlb_flush(CPUState *cpu)
 {
+    void *array[10];
+     char **strings;
+     int size;
+     size = backtrace (array, 2);
+     strings = backtrace_symbols (array, size);
+    trace_tlb_flush(strings[1]);
+    free(strings);
     tlb_flush_by_mmuidx(cpu, ALL_MMUIDX_BITS);
 }
 
