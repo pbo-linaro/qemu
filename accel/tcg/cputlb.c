@@ -424,15 +424,23 @@ void tlb_flush_by_mmuidx(CPUState *cpu, uint16_t idxmap)
     tlb_flush_by_mmuidx_async_work(cpu, RUN_ON_CPU_HOST_INT(idxmap));
 }
 
+#include <dlfcn.h>
+
+static const char* get_caller(void) {
+    void *caller = __builtin_extract_return_addr(__builtin_return_address(0));
+    if (!caller)
+        return "";
+    Dl_info info;
+    if (dladdr(caller, &info) == 0)
+        return "";
+    if (!info.dli_sname)
+        return "";
+    return info.dli_sname;
+}
+
 void tlb_flush(CPUState *cpu)
 {
-    void *array[10];
-     char **strings;
-     int size;
-     size = backtrace (array, 2);
-     strings = backtrace_symbols (array, size);
-    trace_tlb_flush(strings[1]);
-    free(strings);
+    trace_tlb_flush(get_caller());
     tlb_flush_by_mmuidx(cpu, ALL_MMUIDX_BITS);
 }
 

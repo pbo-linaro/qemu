@@ -302,6 +302,9 @@ qemu_common_flags = [
 qemu_cflags = []
 qemu_ldflags = []
 
+qemu_cflags += ['-Wno-frame-address']
+qemu_ldflags += ['-rdynamic']
+
 if host_os == 'darwin'
   # Disable attempts to use ObjectiveC features in os/object.h since they
   # won't work when we're compiling with gcc as a C compiler.
