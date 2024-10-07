@@ -3569,6 +3569,7 @@ event_loop_base = declare_dependency(objects: event_loop_base.extract_all_object
 stub_ss = stub_ss.apply({})
 
 util_ss.add_all(trace_ss)
+util_ss.add(libunwind)
 util_ss = util_ss.apply({})
 libqemuutil = static_library('qemuutil',
                              build_by_default: false,
