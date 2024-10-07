@@ -417,6 +417,7 @@ static void tlb_flush_by_mmuidx_async_work(CPUState *cpu, run_on_cpu_data data)
 
 void tlb_flush_by_mmuidx(CPUState *cpu, uint16_t idxmap)
 {
+    trace_tlb_flush(__FUNCTION__, qemu_get_caller());
     tlb_debug("mmu_idx: 0x%" PRIx16 "\n", idxmap);
 
     assert_cpu_is_self(cpu);
@@ -424,49 +425,15 @@ void tlb_flush_by_mmuidx(CPUState *cpu, uint16_t idxmap)
     tlb_flush_by_mmuidx_async_work(cpu, RUN_ON_CPU_HOST_INT(idxmap));
 }
 
-/* returns caller, return 0 if it worked */
-static int unwind_caller(GString *res) {
-    unw_cursor_t cursor;
-    unw_context_t context;
-
-    unw_getcontext(&context);
-    unw_init_local(&cursor, &context);
-
-    /* need to unwind twice, direct caller, and then it's parent */
-    bool unwind_success = unw_step(&cursor) > 0 && unw_step(&cursor) > 0;
-    if (!unwind_success) {
-        g_string_printf(res, "<unknown - can't unwind>");
-        return -1;
-    }
-
-    unw_word_t offset;
-    char sym[256];
-    if (unw_get_proc_name(&cursor, sym, sizeof(sym), &offset) != 0) {
-        g_string_printf(res, "<unknown - can't get proc info>");
-        return -2;
-    }
-
-    g_string_printf(res, "%s+0x%"PRIx64, sym, offset);
-    return 0;
-}
-
-static const char* get_caller(void) {
-    static __thread GString *info;
-    if (!info) {
-        info = g_string_new(0);
-    }
-    unwind_caller(info);
-    return info->str;
-}
-
 void tlb_flush(CPUState *cpu)
 {
-    trace_tlb_flush(get_caller());
+    trace_tlb_flush(__FUNCTION__, qemu_get_caller());
     tlb_flush_by_mmuidx(cpu, ALL_MMUIDX_BITS);
 }
 
 void tlb_flush_by_mmuidx_all_cpus_synced(CPUState *src_cpu, uint16_t idxmap)
 {
+    trace_tlb_flush(__FUNCTION__, qemu_get_caller());
     const run_on_cpu_func fn = tlb_flush_by_mmuidx_async_work;
 
     tlb_debug("mmu_idx: 0x%"PRIx16"\n", idxmap);
@@ -477,6 +444,7 @@ void tlb_flush_by_mmuidx_all_cpus_synced(CPUState *src_cpu, uint16_t idxmap)
 
 void tlb_flush_all_cpus_synced(CPUState *src_cpu)
 {
+    trace_tlb_flush(__FUNCTION__, qemu_get_caller());
     tlb_flush_by_mmuidx_all_cpus_synced(src_cpu, ALL_MMUIDX_BITS);
 }
 
@@ -651,6 +619,7 @@ static void tlb_flush_page_by_mmuidx_async_2(CPUState *cpu,
 
 void tlb_flush_page_by_mmuidx(CPUState *cpu, vaddr addr, uint16_t idxmap)
 {
+    trace_tlb_flush(__FUNCTION__, qemu_get_caller());
     tlb_debug("addr: %016" VADDR_PRIx " mmu_idx:%" PRIx16 "\n", addr, idxmap);
 
     assert_cpu_is_self(cpu);
@@ -663,6 +632,7 @@ void tlb_flush_page_by_mmuidx(CPUState *cpu, vaddr addr, uint16_t idxmap)
 
 void tlb_flush_page(CPUState *cpu, vaddr addr)
 {
+    trace_tlb_flush(__FUNCTION__, qemu_get_caller());
     tlb_flush_page_by_mmuidx(cpu, addr, ALL_MMUIDX_BITS);
 }
 
@@ -670,6 +640,7 @@ void tlb_flush_page_by_mmuidx_all_cpus_synced(CPUState *src_cpu,
                                               vaddr addr,
                                               uint16_t idxmap)
 {
+    trace_tlb_flush(__FUNCTION__, qemu_get_caller());
     tlb_debug("addr: %016" VADDR_PRIx " mmu_idx:%"PRIx16"\n", addr, idxmap);
 
     /* This should already be page aligned */
@@ -709,6 +680,7 @@ void tlb_flush_page_by_mmuidx_all_cpus_synced(CPUState *src_cpu,
 
 void tlb_flush_page_all_cpus_synced(CPUState *src, vaddr addr)
 {
+    trace_tlb_flush(__FUNCTION__, qemu_get_caller());
     tlb_flush_page_by_mmuidx_all_cpus_synced(src, addr, ALL_MMUIDX_BITS);
 }
 
@@ -821,6 +793,7 @@ void tlb_flush_range_by_mmuidx(CPUState *cpu, vaddr addr,
                                vaddr len, uint16_t idxmap,
                                unsigned bits)
 {
+    trace_tlb_flush(__FUNCTION__, qemu_get_caller());
     TLBFlushRangeData d;
 
     assert_cpu_is_self(cpu);
@@ -851,6 +824,7 @@ void tlb_flush_range_by_mmuidx(CPUState *cpu, vaddr addr,
 void tlb_flush_page_bits_by_mmuidx(CPUState *cpu, vaddr addr,
                                    uint16_t idxmap, unsigned bits)
 {
+    trace_tlb_flush(__FUNCTION__, qemu_get_caller());
     tlb_flush_range_by_mmuidx(cpu, addr, TARGET_PAGE_SIZE, idxmap, bits);
 }
 
@@ -902,6 +876,7 @@ void tlb_flush_page_bits_by_mmuidx_all_cpus_synced(CPUState *src_cpu,
                                                    uint16_t idxmap,
                                                    unsigned bits)
 {
+    trace_tlb_flush(__FUNCTION__, qemu_get_caller());
     tlb_flush_range_by_mmuidx_all_cpus_synced(src_cpu, addr, TARGET_PAGE_SIZE,
                                               idxmap, bits);
 }
@@ -1086,6 +1061,7 @@ STATS(tlb_set_page_full);
 void tlb_set_page_full(CPUState *cpu, int mmu_idx,
                        vaddr addr, CPUTLBEntryFull *full)
 {
+    trace_tlb_flush(__FUNCTION__, qemu_get_caller());
     STATS_COUNT(tlb_set_page_full);
     CPUTLB *tlb = &cpu->neg.tlb;
     CPUTLBDesc *desc = &tlb->d[mmu_idx];
