@@ -424,36 +424,39 @@ void tlb_flush_by_mmuidx(CPUState *cpu, uint16_t idxmap)
     tlb_flush_by_mmuidx_async_work(cpu, RUN_ON_CPU_HOST_INT(idxmap));
 }
 
-// Call this function to get a backtrace.
-static void unwind_backtrace(void) {
-  unw_cursor_t cursor;
-  unw_context_t context;
+/* returns caller, return 0 if it worked */
+static int unwind_caller(GString *res) {
+    unw_cursor_t cursor;
+    unw_context_t context;
 
-  // Initialize cursor to current frame for local unwinding.
-  unw_getcontext(&context);
-  unw_init_local(&cursor, &context);
+    unw_getcontext(&context);
+    unw_init_local(&cursor, &context);
 
-  // Unwind frames one by one, going up the frame stack.
-  while (unw_step(&cursor) > 0) {
-    unw_word_t offset, pc;
-    unw_get_reg(&cursor, UNW_REG_IP, &pc);
-    if (pc == 0) {
-      break;
+    /* need to unwind twice, direct caller, and then it's parent */
+    bool unwind_success = unw_step(&cursor) > 0 && unw_step(&cursor) > 0;
+    if (!unwind_success) {
+        g_string_printf(res, "<unknown - can't unwind>");
+        return -1;
     }
-    printf("0x%lx:", pc);
 
+    unw_word_t offset;
     char sym[256];
-    if (unw_get_proc_name(&cursor, sym, sizeof(sym), &offset) == 0) {
-      printf(" (%s+0x%lx)\n", sym, offset);
-    } else {
-      printf(" -- error: unable to obtain symbol name for this frame\n");
+    if (unw_get_proc_name(&cursor, sym, sizeof(sym), &offset) != 0) {
+        g_string_printf(res, "<unknown - can't get proc info>");
+        return -2;
     }
-  }
+
+    g_string_printf(res, "%s+0x%"PRIx64, sym, offset);
+    return 0;
 }
 
 static const char* get_caller(void) {
-    unwind_backtrace();
-    return "";
+    static __thread GString *info;
+    if (!info) {
+        info = g_string_new(0);
+    }
+    unwind_caller(info);
+    return info->str;
 }
 
 void tlb_flush(CPUState *cpu)
