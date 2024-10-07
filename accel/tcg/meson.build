@@ -22,7 +22,6 @@ specific_ss.add(when: ['CONFIG_SYSTEM_ONLY', 'CONFIG_TCG'], if_true: files(
   'cputlb.c',
   'watchpoint.c',
 ))
-specific_ss.add(libunwind)
 
 system_ss.add(when: ['CONFIG_TCG'], if_true: files(
   'icount-common.c',
