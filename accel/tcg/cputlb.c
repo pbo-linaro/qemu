@@ -424,18 +424,36 @@ void tlb_flush_by_mmuidx(CPUState *cpu, uint16_t idxmap)
     tlb_flush_by_mmuidx_async_work(cpu, RUN_ON_CPU_HOST_INT(idxmap));
 }
 
-#include <dlfcn.h>
+// Call this function to get a backtrace.
+static void unwind_backtrace(void) {
+  unw_cursor_t cursor;
+  unw_context_t context;
+
+  // Initialize cursor to current frame for local unwinding.
+  unw_getcontext(&context);
+  unw_init_local(&cursor, &context);
+
+  // Unwind frames one by one, going up the frame stack.
+  while (unw_step(&cursor) > 0) {
+    unw_word_t offset, pc;
+    unw_get_reg(&cursor, UNW_REG_IP, &pc);
+    if (pc == 0) {
+      break;
+    }
+    printf("0x%lx:", pc);
+
+    char sym[256];
+    if (unw_get_proc_name(&cursor, sym, sizeof(sym), &offset) == 0) {
+      printf(" (%s+0x%lx)\n", sym, offset);
+    } else {
+      printf(" -- error: unable to obtain symbol name for this frame\n");
+    }
+  }
+}
 
 static const char* get_caller(void) {
-    void *caller = __builtin_extract_return_addr(__builtin_return_address(0));
-    if (!caller)
-        return "";
-    Dl_info info;
-    if (dladdr(caller, &info) == 0)
-        return "";
-    if (!info.dli_sname)
-        return "";
-    return info.dli_sname;
+    unwind_backtrace();
+    return "";
 }
 
 void tlb_flush(CPUState *cpu)

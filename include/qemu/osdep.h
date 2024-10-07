@@ -132,6 +132,8 @@ QEMU_EXTERN_C int daemon(int, int);
  * because it is redefined there. */
 #include <setjmp.h>
 #include <signal.h>
+
+#define UNW_LOCAL_ONLY
 #include <libunwind.h>
 
 #ifdef CONFIG_IOVEC
