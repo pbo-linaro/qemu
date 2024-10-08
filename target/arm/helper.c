@@ -32,6 +32,8 @@
 #include "cpregs.h"
 #include "target/arm/gtimer.h"
 
+#include "trace.h"
+
 #define ARM_CPU_FREQ 1000000000 /* FIXME: 1 GHz, should be configurable */
 
 static void switch_mode(CPUARMState *env, int mode);
@@ -4374,10 +4376,14 @@ static void vmsa_ttbr_write(CPUARMState *env, const ARMCPRegInfo *ri,
                             uint64_t value)
 {
     /* If the ASID changes (with a 64-bit write), we must flush the TLB.  */
-    if (cpreg_field_is_64bit(ri) &&
-        extract64(raw_read(env, ri) ^ value, 48, 16) != 0) {
-        ARMCPU *cpu = env_archcpu(env);
-        tlb_flush(CPU(cpu));
+    if (cpreg_field_is_64bit(ri)) {
+        uint64_t old_asid = extract64(raw_read(env, ri), 48, 16);
+        uint64_t new_asid = extract64(value, 48, 16);
+        if ((old_asid ^ new_asid) > 1) {
+            ARMCPU *cpu = env_archcpu(env);
+            trace_asid_change(old_asid, new_asid);
+            tlb_flush(CPU(cpu));
+        }
     }
     raw_write(env, ri, value);
 }

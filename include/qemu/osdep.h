@@ -845,6 +845,7 @@ int unwind_caller(GString *res)
 static inline __attribute__((always_inline))
 const char* qemu_get_caller(void)
 {
+    return "";
     static __thread GString *info;
     if (!info) {
         info = g_string_new(0);

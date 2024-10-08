@@ -1061,7 +1061,7 @@ STATS(tlb_set_page_full);
 void tlb_set_page_full(CPUState *cpu, int mmu_idx,
                        vaddr addr, CPUTLBEntryFull *full)
 {
-    trace_tlb_flush(__FUNCTION__, qemu_get_caller());
+    //trace_tlb_flush(__FUNCTION__, qemu_get_caller());
     STATS_COUNT(tlb_set_page_full);
     CPUTLB *tlb = &cpu->neg.tlb;
     CPUTLBDesc *desc = &tlb->d[mmu_idx];
