@@ -3,8 +3,34 @@ on:
     branches:
       - master
 
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
 jobs:
-  build_qemu:
+  checkpatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: fetch all commits
+        run: git fetch -a origin --unshallow || true
+      - name: add upstream
+        run: git remote add upstream -f https://gitlab.com/qemu-project/qemu
+      - name: checkpatch
+        run: ./scripts/checkpatch.pl $(git merge-base upstream/master HEAD)..HEAD
+
+  build-clang:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: build_container
+        run: ./run.sh amd64 true
+      - name: build clang
+        run: ./run.sh amd64 ./build.sh clang
+
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -13,3 +39,51 @@ jobs:
         run: ./run.sh amd64 true
       - name: build opt
         run: ./run.sh amd64 ./build.sh opt
+
+  check-tcg:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: build_container
+        run: ./run.sh amd64 true
+      - name: build debug
+        run: ./run.sh amd64 ./build.sh debug
+      - name: check-tcg
+        run: ./run.sh amd64 make -C build check-tcg
+
+  check-functional:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: build_container
+        run: ./run.sh amd64 true
+      - name: build opt
+        run: ./run.sh amd64 ./build.sh opt
+      - name: check-functional
+        run: ./run.sh amd64 make -C build check-functional
+
+  check-avocado:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: build_container
+        run: ./run.sh amd64 true
+      - name: build opt
+        run: ./run.sh amd64 ./build.sh opt
+      - name: check-avocado
+        run: ./run.sh amd64 make -C build check-avocado
+
+  check: # Run block, qapi-schema, unit, softfloat, qtest and decodetree tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: build_container
+        run: ./run.sh amd64 true
+      - name: build opt
+        run: ./run.sh amd64 ./build.sh opt
+      - name: check
+        run: ./run.sh amd64 make -C build check
