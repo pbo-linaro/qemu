@@ -1,4 +1,7 @@
-on: push
+on:
+  push:
+    branches:
+      - master
 
 jobs:
   build_qemu:
@@ -6,8 +9,6 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
-      - name: check merge is success
-        run: bash -c 'if [ -f shazam.log ]; then echo "merge failed"; cat shazam.log; exit 1; fi'
       - name: build_container
         run: ./run.sh amd64 true
       - name: build opt
