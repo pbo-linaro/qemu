@@ -76,7 +76,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: build-ccache-debug
-          path: /home/runner/cache.tar
+          path: /home/runner/
       - run: pushd /home/runner/.cache/ccache && tar xvf /home/runner/cache.tar && popd
       - uses: actions/upload-artifact@v3
       - name: build debug
@@ -95,7 +95,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: build-ccache
-          path: /home/runner/cache.tar
+          path: /home/runner/
       - run: pushd /home/runner/.cache/ccache && tar xvf /home/runner/cache.tar && popd
       - name: build opt
         run: ./run.sh amd64 ./build.sh opt
@@ -113,7 +113,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: build-ccache
-          path: /home/runner/cache.tar
+          path: /home/runner/
       - run: pushd /home/runner/.cache/ccache && tar xvf /home/runner/cache.tar && popd
       - name: build opt
         run: ./run.sh amd64 ./build.sh opt
@@ -131,7 +131,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: build-ccache
-          path: /home/runner/cache.tar
+          path: /home/runner/
       - run: pushd /home/runner/.cache/ccache && tar xvf /home/runner/cache.tar && popd
       - name: build opt
         run: ./run.sh amd64 ./build.sh opt
