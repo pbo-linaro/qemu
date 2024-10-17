@@ -29,11 +29,10 @@ jobs:
         run: ./run.sh amd64 true
       - name: build clang
         run: ./run.sh amd64 ./build.sh clang
-      - run: tar czvf build.tar.gz build_amd64/
       - uses: actions/upload-artifact@v3
         with:
-          name: build-clang
-          path: build.tar.gz
+          name: build-ccache-clang
+          path: /home/runner/.cache/ccache/
 
   build-debug:
     runs-on: ubuntu-latest
@@ -44,11 +43,10 @@ jobs:
         run: ./run.sh amd64 true
       - name: build debug
         run: ./run.sh amd64 ./build.sh debug
-      - run: tar czvf build.tar.gz build_amd64/
       - uses: actions/upload-artifact@v3
         with:
-          name: build-debug
-          path: build.tar.gz
+          name: build-ccache-debug
+          path: /home/runner/.cache/ccache/
 
   build:
     runs-on: ubuntu-latest
@@ -59,11 +57,10 @@ jobs:
         run: ./run.sh amd64 true
       - name: build opt
         run: ./run.sh amd64 ./build.sh opt
-      - run: tar czvf build.tar.gz build_amd64/
       - uses: actions/upload-artifact@v3
         with:
-          name: build
-          path: build.tar.gz
+          name: build-ccache
+          path: /home/runner/.cache/ccache/
 
   check-tcg:
     runs-on: ubuntu-latest
@@ -75,8 +72,10 @@ jobs:
         run: ./run.sh amd64 true
       - uses: actions/download-artifact@v3
         with:
-          name: build-debug
-      - run: tar xzvf build.tar.gz
+          name: build-ccache-debug
+          path: /home/runner/.cache/ccache/
+      - name: build debug
+        run: ./run.sh amd64 ./build.sh debug
       - name: check-tcg
         run: ./run.sh amd64 make -C build check-tcg
 
@@ -90,8 +89,10 @@ jobs:
         run: ./run.sh amd64 true
       - uses: actions/download-artifact@v3
         with:
-          name: build
-      - run: tar xzvf build.tar.gz
+          name: build-ccache
+          path: /home/runner/.cache/ccache/
+      - name: build opt
+        run: ./run.sh amd64 ./build.sh opt
       - name: check-functional
         run: ./run.sh amd64 make -C build check-functional
 
@@ -105,8 +106,10 @@ jobs:
         run: ./run.sh amd64 true
       - uses: actions/download-artifact@v3
         with:
-          name: build
-      - run: tar xzvf build.tar.gz
+          name: build-ccache
+          path: /home/runner/.cache/ccache/
+      - name: build opt
+        run: ./run.sh amd64 ./build.sh opt
       - name: check-avocado
         run: ./run.sh amd64 make -C build check-avocado
 
@@ -120,7 +123,9 @@ jobs:
         run: ./run.sh amd64 true
       - uses: actions/download-artifact@v3
         with:
-          name: build
-      - run: tar xzvf build.tar.gz
+          name: build-ccache
+          path: /home/runner/.cache/ccache/
+      - name: build opt
+        run: ./run.sh amd64 ./build.sh opt
       - name: check
         run: ./run.sh amd64 make -C build check
