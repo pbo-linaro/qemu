@@ -29,7 +29,7 @@ jobs:
         run: ./run.sh amd64 true
       - name: build clang
         run: ./run.sh amd64 ./build.sh clang
-      - run: pushd /home/runner/.ccache/ccache && tar cvf /home/runner/cache.tar ./ && popd
+      - run: pushd /home/runner/.cache/ccache && tar cvf /home/runner/cache.tar ./ && popd
       - uses: actions/upload-artifact@v3
         with:
           name: build-ccache-clang
@@ -44,7 +44,7 @@ jobs:
         run: ./run.sh amd64 true
       - name: build debug
         run: ./run.sh amd64 ./build.sh debug
-      - run: pushd /home/runner/.ccache/ccache && tar cvf /home/runner/cache.tar ./ && popd
+      - run: pushd /home/runner/.cache/ccache && tar cvf /home/runner/cache.tar ./ && popd
       - uses: actions/upload-artifact@v3
         with:
           name: build-ccache-debug
@@ -59,7 +59,7 @@ jobs:
         run: ./run.sh amd64 true
       - name: build opt
         run: ./run.sh amd64 ./build.sh opt
-      - run: pushd /home/runner/.ccache/ccache && tar cvf /home/runner/cache.tar ./ && popd
+      - run: pushd /home/runner/.cache/ccache && tar cvf /home/runner/cache.tar ./ && popd
       - uses: actions/upload-artifact@v3
         with:
           name: build-ccache
@@ -77,7 +77,7 @@ jobs:
         with:
           name: build-ccache-debug
           path: /home/runner/cache.tar
-      - run: pushd /home/runner/.ccache/ccache && tar xvf /home/runner/cache.tar && popd
+      - run: pushd /home/runner/.cache/ccache && tar xvf /home/runner/cache.tar && popd
       - uses: actions/upload-artifact@v3
       - name: build debug
         run: ./run.sh amd64 ./build.sh debug
@@ -96,7 +96,7 @@ jobs:
         with:
           name: build-ccache
           path: /home/runner/cache.tar
-      - run: pushd /home/runner/.ccache/ccache && tar xvf /home/runner/cache.tar && popd
+      - run: pushd /home/runner/.cache/ccache && tar xvf /home/runner/cache.tar && popd
       - name: build opt
         run: ./run.sh amd64 ./build.sh opt
       - name: check-functional
@@ -114,7 +114,7 @@ jobs:
         with:
           name: build-ccache
           path: /home/runner/cache.tar
-      - run: pushd /home/runner/.ccache/ccache && tar xvf /home/runner/cache.tar && popd
+      - run: pushd /home/runner/.cache/ccache && tar xvf /home/runner/cache.tar && popd
       - name: build opt
         run: ./run.sh amd64 ./build.sh opt
       - name: check-avocado
@@ -132,7 +132,7 @@ jobs:
         with:
           name: build-ccache
           path: /home/runner/cache.tar
-      - run: pushd /home/runner/.ccache/ccache && tar xvf /home/runner/cache.tar && popd
+      - run: pushd /home/runner/.cache/ccache && tar xvf /home/runner/cache.tar && popd
       - name: build opt
         run: ./run.sh amd64 ./build.sh opt
       - name: check
