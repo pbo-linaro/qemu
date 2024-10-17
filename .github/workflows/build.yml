@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: fetch all commits
         run: git fetch -a origin --unshallow || true
       - name: add upstream
@@ -24,66 +24,96 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: build_container
         run: ./run.sh amd64 true
       - name: build clang
         run: ./run.sh amd64 ./build.sh clang
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-clang
+          path: build_amd64/
+
+  build-debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: build_container
+        run: ./run.sh amd64 true
+      - name: build opt
+        run: ./run.sh amd64 ./build.sh debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-debug
+          path: build_amd64/
 
   build:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: build_container
         run: ./run.sh amd64 true
       - name: build opt
         run: ./run.sh amd64 ./build.sh opt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: build_amd64/
 
   check-tcg:
     runs-on: ubuntu-latest
+    needs: build-debug
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: build_container
         run: ./run.sh amd64 true
-      - name: build debug
-        run: ./run.sh amd64 ./build.sh debug
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-debug
       - name: check-tcg
         run: ./run.sh amd64 make -C build check-tcg
 
   check-functional:
     runs-on: ubuntu-latest
+    needs: build
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: build_container
         run: ./run.sh amd64 true
-      - name: build opt
-        run: ./run.sh amd64 ./build.sh opt
+      - uses: actions/download-artifact@v4
+        with:
+          name: build
       - name: check-functional
         run: ./run.sh amd64 make -C build check-functional
 
   check-avocado:
     runs-on: ubuntu-latest
+    needs: build
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: build_container
         run: ./run.sh amd64 true
-      - name: build opt
-        run: ./run.sh amd64 ./build.sh opt
+      - uses: actions/download-artifact@v4
+        with:
+          name: build
       - name: check-avocado
         run: ./run.sh amd64 make -C build check-avocado
 
   check: # Run block, qapi-schema, unit, softfloat, qtest and decodetree tests
     runs-on: ubuntu-latest
+    needs: build
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: build_container
         run: ./run.sh amd64 true
-      - name: build opt
-        run: ./run.sh amd64 ./build.sh opt
+      - uses: actions/download-artifact@v4
+        with:
+          name: build
       - name: check
         run: ./run.sh amd64 make -C build check
