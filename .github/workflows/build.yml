@@ -29,10 +29,11 @@ jobs:
         run: ./run.sh amd64 true
       - name: build clang
         run: ./run.sh amd64 ./build.sh clang
-      - uses: actions/upload-artifact@v4
+      - run: tar cvf build.tar build_amd64/
+      - uses: actions/upload-artifact@v3
         with:
           name: build-clang
-          path: build_amd64/
+          path: build.tar
 
   build-debug:
     runs-on: ubuntu-latest
@@ -41,12 +42,13 @@ jobs:
         uses: actions/checkout@v4
       - name: build_container
         run: ./run.sh amd64 true
-      - name: build opt
+      - name: build debug
         run: ./run.sh amd64 ./build.sh debug
-      - uses: actions/upload-artifact@v4
+      - run: tar cvf build.tar build_amd64/
+      - uses: actions/upload-artifact@v3
         with:
           name: build-debug
-          path: build_amd64/
+          path: build.tar
 
   build:
     runs-on: ubuntu-latest
@@ -57,10 +59,11 @@ jobs:
         run: ./run.sh amd64 true
       - name: build opt
         run: ./run.sh amd64 ./build.sh opt
-      - uses: actions/upload-artifact@v4
+      - run: tar cvf build.tar build_amd64/
+      - uses: actions/upload-artifact@v3
         with:
           name: build
-          path: build_amd64/
+          path: build.tar
 
   check-tcg:
     runs-on: ubuntu-latest
@@ -70,9 +73,10 @@ jobs:
         uses: actions/checkout@v4
       - name: build_container
         run: ./run.sh amd64 true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v3
         with:
           name: build-debug
+      - run: tar xvf build.tar
       - name: check-tcg
         run: ./run.sh amd64 make -C build check-tcg
 
@@ -84,9 +88,10 @@ jobs:
         uses: actions/checkout@v4
       - name: build_container
         run: ./run.sh amd64 true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v3
         with:
           name: build
+      - run: tar xvf build.tar
       - name: check-functional
         run: ./run.sh amd64 make -C build check-functional
 
@@ -98,9 +103,10 @@ jobs:
         uses: actions/checkout@v4
       - name: build_container
         run: ./run.sh amd64 true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v3
         with:
           name: build
+      - run: tar xvf build.tar
       - name: check-avocado
         run: ./run.sh amd64 make -C build check-avocado
 
@@ -112,8 +118,9 @@ jobs:
         uses: actions/checkout@v4
       - name: build_container
         run: ./run.sh amd64 true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v3
         with:
           name: build
+      - run: tar xvf build.tar
       - name: check
         run: ./run.sh amd64 make -C build check
