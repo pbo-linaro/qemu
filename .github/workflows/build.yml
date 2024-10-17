@@ -29,11 +29,11 @@ jobs:
         run: ./run.sh amd64 true
       - name: build clang
         run: ./run.sh amd64 ./build.sh clang
-      - run: tar cvf build.tar build_amd64/
+      - run: tar czvf build.tar.gz build_amd64/
       - uses: actions/upload-artifact@v3
         with:
           name: build-clang
-          path: build.tar
+          path: build.tar.gz
 
   build-debug:
     runs-on: ubuntu-latest
@@ -44,11 +44,11 @@ jobs:
         run: ./run.sh amd64 true
       - name: build debug
         run: ./run.sh amd64 ./build.sh debug
-      - run: tar cvf build.tar build_amd64/
+      - run: tar czvf build.tar.gz build_amd64/
       - uses: actions/upload-artifact@v3
         with:
           name: build-debug
-          path: build.tar
+          path: build.tar.gz
 
   build:
     runs-on: ubuntu-latest
@@ -59,11 +59,11 @@ jobs:
         run: ./run.sh amd64 true
       - name: build opt
         run: ./run.sh amd64 ./build.sh opt
-      - run: tar cvf build.tar build_amd64/
+      - run: tar czvf build.tar.gz build_amd64/
       - uses: actions/upload-artifact@v3
         with:
           name: build
-          path: build.tar
+          path: build.tar.gz
 
   check-tcg:
     runs-on: ubuntu-latest
@@ -76,7 +76,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: build-debug
-      - run: tar xvf build.tar
+      - run: tar xzvf build.tar.gz
       - name: check-tcg
         run: ./run.sh amd64 make -C build check-tcg
 
@@ -91,7 +91,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: build
-      - run: tar xvf build.tar
+      - run: tar xzvf build.tar.gz
       - name: check-functional
         run: ./run.sh amd64 make -C build check-functional
 
@@ -106,7 +106,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: build
-      - run: tar xvf build.tar
+      - run: tar xzvf build.tar.gz
       - name: check-avocado
         run: ./run.sh amd64 make -C build check-avocado
 
@@ -121,6 +121,6 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: build
-      - run: tar xvf build.tar
+      - run: tar xzvf build.tar.gz
       - name: check
         run: ./run.sh amd64 make -C build check
