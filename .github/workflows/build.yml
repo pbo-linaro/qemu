@@ -78,7 +78,6 @@ jobs:
           name: build-ccache-debug
           path: /home/runner/
       - run: pushd /home/runner/.cache/ccache && tar xvf /home/runner/cache.tar && popd
-      - uses: actions/upload-artifact@v3
       - name: build debug
         run: ./run.sh amd64 ./build.sh debug
       - name: check-tcg
