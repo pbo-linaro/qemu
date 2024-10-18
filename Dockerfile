@@ -23,7 +23,7 @@ RUN apt update && apt install -y flex bison
 
 RUN apt update && apt install -y libunwind-dev
 
-RUN apt update && apt install -y clang
+RUN apt update && apt install -y clang podman
 
 ARG arch=
 ENV ARCH=${arch}
