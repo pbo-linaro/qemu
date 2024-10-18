@@ -1,15 +1,11 @@
-on: push
+on:
+  push:
+    branches:
+      - master
 
-# For personal repositories, limit workflow runs using:
-#
-#on:
-#  push:
-#    branches:
-#      - master
-#
-#concurrency:
-#  group: ${{ github.workflow }}
-#  cancel-in-progress: true
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
 
 jobs:
   checkapply:
