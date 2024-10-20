@@ -1053,6 +1053,9 @@ have_xen_pci_passthrough = get_option('xen_pci_passthrough') \
 # Dependencies #
 ################
 
+backtrace = cc.find_library('backtrace', has_headers: 'backtrace.h', required: false)
+add_project_dependencies(backtrace, language: all_languages)
+
 # When bumping glib minimum version, please check also whether to increase
 # the _WIN32_WINNT setting in osdep.h according to the value from glib.
 # You should also check if any of the glib.version() checks
@@ -2481,6 +2484,7 @@ endif
 config_host_data.set('CONFIG_CURL', curl.found())
 config_host_data.set('CONFIG_CURSES', curses.found())
 config_host_data.set('CONFIG_GBM', gbm.found())
+config_host_data.set('CONFIG_BACKTRACE', backtrace.found())
 config_host_data.set('CONFIG_GIO', gio.found())
 config_host_data.set('CONFIG_GLUSTERFS', glusterfs.found())
 if glusterfs.found()
@@ -3787,6 +3791,7 @@ event_loop_base = declare_dependency(objects: event_loop_base.extract_all_object
 stub_ss = stub_ss.apply({})
 
 util_ss.add_all(trace_ss)
+util_ss.add(backtrace)
 util_ss = util_ss.apply({})
 libqemuutil = static_library('qemuutil',
                              build_by_default: false,
