@@ -1,7 +1,7 @@
 t = []
 if get_option('plugins')
   foreach i : ['cache', 'drcov', 'execlog', 'hotblocks', 'hotpages', 'howvec',
-               'hwprofile', 'ips', 'lockstep', 'stoptrigger', 'min']
+               'hwprofile', 'ips', 'lockstep', 'stoptrigger', 'min', 'deadlock']
     if host_os == 'windows'
       t += shared_module(i, files(i + '.c') + 'win32_linker.c',
                         include_directories: '../../include/qemu',
