@@ -23,6 +23,7 @@
 #include "exec/exec-all.h"
 #include "exec/page-protection.h"
 #include "tcg/helper-tcg.h"
+#include "trace.h"
 
 typedef struct TranslateParams {
     target_ulong addr;
@@ -109,6 +110,8 @@ static bool ptw_setl_slow(const PTETranslate *in, uint32_t old, uint32_t new)
     uint32_t cmp;
 
     /* Does x86 really perform a rmw cycle on mmio for ptw? */
+    static int count;
+    trace_setl_ptw(count++);
     start_exclusive();
     cmp = cpu_ldl_mmuidx_ra(in->env, in->gaddr, in->ptw_idx, 0);
     if (cmp == old) {
