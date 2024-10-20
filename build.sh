@@ -83,5 +83,4 @@ if [ ! -f .configured ]; then
     touch .configured
 fi
 ninja | sed -e "s#^\.\./#$(readlink -f ../)/#"
-make -B -C contrib/plugins/ > /dev/null
 popd > /dev/null
