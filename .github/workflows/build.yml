@@ -206,7 +206,7 @@ jobs:
           docker.io/pbolinaro/qemu-ci:debian-amd64-cross
           bash -cx './configure $QEMU_CONFIGURE_OPTS && ninja -C build install'
       - run: >
-          podman run --privileged --rm -it -v $(pwd):$(pwd) -w $(pwd)
+          podman run --privileged --net host --rm -it -v $(pwd):$(pwd) -w $(pwd)
           docker.io/pbolinaro/qemu-ci:debian-amd64-cross
           bash -cx "make check-functional -k -j $(nproc)"
 
@@ -221,6 +221,6 @@ jobs:
           docker.io/pbolinaro/qemu-ci:debian-amd64-cross
           bash -cx './configure $QEMU_CONFIGURE_OPTS && ninja -C build install'
       - run: >
-          podman run --privileged --rm -it -v $(pwd):$(pwd) -w $(pwd)
+          podman run --privileged --net host --rm -it -v $(pwd):$(pwd) -w $(pwd)
           docker.io/pbolinaro/qemu-ci:debian-amd64-cross
           bash -cx "make check-avocado -k -j $(nproc)"
