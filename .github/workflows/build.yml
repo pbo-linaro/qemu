@@ -174,7 +174,7 @@ jobs:
       - run: >
           podman run --rm -it -v $(pwd):$(pwd) -w $(pwd)
           docker.io/pbolinaro/qemu-ci:debian-amd64-cross
-          bash -cx './configure $QEMU_CONFIGURE_OPTS --enable-debug --enable-asan --enable-ubsan && ninja -C build install'
+          bash -cx './configure $QEMU_CONFIGURE_OPTS && ninja -C build install'
       - run: >
           podman run --privileged --rm -it -v $(pwd):$(pwd) -w $(pwd)
           docker.io/pbolinaro/qemu-ci:debian-amd64-cross
