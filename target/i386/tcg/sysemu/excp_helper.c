@@ -112,12 +112,16 @@ static bool ptw_setl_slow(const PTETranslate *in, uint32_t old, uint32_t new)
     /* Does x86 really perform a rmw cycle on mmio for ptw? */
     static int count;
     trace_setl_ptw(count++);
+    /* We are in cpu_exec, and start_exclusive can't be called directly.*/
+    g_assert(current_cpu && current_cpu->running);
+    cpu_exec_end(current_cpu);
     start_exclusive();
     cmp = cpu_ldl_mmuidx_ra(in->env, in->gaddr, in->ptw_idx, 0);
     if (cmp == old) {
         cpu_stl_mmuidx_ra(in->env, in->gaddr, new, in->ptw_idx, 0);
     }
     end_exclusive();
+    cpu_exec_start(current_cpu);
     return cmp == old;
 }
 
