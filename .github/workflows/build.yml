@@ -236,7 +236,7 @@ jobs:
       - run: >
           podman run --pull always --privileged --rm -it -v /dev/kvm:/dev/kvm -v $(pwd):$(pwd) -w $(pwd)
           docker.io/pbolinaro/qemu-ci:debian-amd64-cross
-          bash -cx "make check -k -j1"
+          bash -cx "make check -k -j1 SPEED=slow"
 
   check-tcg:
     needs: checkapply
@@ -253,7 +253,7 @@ jobs:
       - run: >
           podman run --pull always --privileged --rm -it -v $(pwd):$(pwd) -w $(pwd)
           docker.io/pbolinaro/qemu-ci:debian-all-test-cross
-          bash -cx "make check-tcg -k -j1"
+          bash -cx "make check-tcg -k -j1 SPEED=slow"
 
   check-functional:
     needs: checkapply
@@ -277,7 +277,7 @@ jobs:
       - run: >
           podman run --pull always --privileged --rm -it -v /dev/kvm:/dev/kvm -v $(pwd):$(pwd) -w $(pwd)
           docker.io/pbolinaro/qemu-ci:debian-amd64-cross-precache-tests
-          bash -cx "make check-functional -k -j1"
+          bash -cx "make check-functional -k -j1 SPEED=slow"
 
   check-avocado:
     needs: checkapply
@@ -300,4 +300,4 @@ jobs:
       - run: >
           podman run --pull always --privileged --rm -it -v /dev/kvm:/dev/kvm -v $(pwd):$(pwd) -w $(pwd)
           docker.io/pbolinaro/qemu-ci:debian-amd64-cross-precache-tests
-          bash -cx "make check-avocado -k -j1"
+          bash -cx "make check-avocado -k -j1 SPEED=slow"
