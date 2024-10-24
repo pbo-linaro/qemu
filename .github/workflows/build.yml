@@ -9,7 +9,7 @@ concurrency:
 
 jobs:
   checkapply:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       # to debug container live from GitHub
       # - uses: mxschmitt/action-tmate@v3
@@ -19,7 +19,7 @@ jobs:
 
   checkpatch-ignore-signoff:
     needs: checkapply
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -32,7 +32,7 @@ jobs:
 
   checkpatch-with-signoff:
     needs: checkapply
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -48,7 +48,7 @@ jobs:
 
   build-cross:
     needs: checkapply
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -61,7 +61,7 @@ jobs:
 
   build:
     needs: checkapply
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -72,7 +72,7 @@ jobs:
 
   build-windows:
     needs: checkapply
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
       - uses: msys2/setup-msys2@v2
@@ -114,7 +114,7 @@ jobs:
 
   build-misc:
     needs: checkapply
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -125,7 +125,7 @@ jobs:
 
   build-32bits:
     needs: checkapply
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -136,7 +136,7 @@ jobs:
 
   build-big-endian:
     needs: checkapply
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -147,7 +147,7 @@ jobs:
 
   build-debug:
     needs: checkapply
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -158,7 +158,7 @@ jobs:
 
   build-static:
     needs: checkapply
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -169,7 +169,7 @@ jobs:
 
   build-clang:
     needs: checkapply
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -180,7 +180,7 @@ jobs:
 
   build-rust:
     needs: checkapply
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -191,7 +191,7 @@ jobs:
 
   build-disable-tcg:
     needs: checkapply
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -202,7 +202,7 @@ jobs:
 
   build-disable-kvm:
     needs: checkapply
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -213,7 +213,7 @@ jobs:
 
   build-disable-tcg-kvm-for-xen:
     needs: checkapply
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -224,7 +224,7 @@ jobs:
 
   check:
     needs: checkapply
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -240,7 +240,7 @@ jobs:
 
   check-tcg:
     needs: checkapply
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -257,7 +257,7 @@ jobs:
 
   check-functional:
     needs: checkapply
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -281,7 +281,7 @@ jobs:
 
   check-avocado:
     needs: checkapply
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: checkout
         uses: actions/checkout@v4
