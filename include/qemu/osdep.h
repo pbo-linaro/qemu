@@ -133,9 +133,6 @@ QEMU_EXTERN_C int daemon(int, int);
 #include <setjmp.h>
 #include <signal.h>
 
-#define UNW_LOCAL_ONLY
-#include <libunwind.h>
-
 #ifdef CONFIG_IOVEC
 #include <sys/uio.h>
 #endif
@@ -832,44 +829,6 @@ static inline void qemu_thread_jit_write(void)
 static inline void qemu_thread_jit_write(void) {}
 static inline void qemu_thread_jit_execute(void) {}
 #endif
-
-/* returns caller, return 0 if it worked */
-static inline __attribute__((always_inline))
-int unwind_caller(GString *res)
-{
-    unw_cursor_t cursor;
-    unw_context_t context;
-
-    unw_getcontext(&context);
-    unw_init_local(&cursor, &context);
-
-    bool unwind_success = unw_step(&cursor);
-    if (!unwind_success) {
-        g_string_printf(res, "<unknown - can't unwind>");
-        return -1;
-    }
-
-    unw_word_t offset;
-    char sym[256];
-    if (unw_get_proc_name(&cursor, sym, sizeof(sym), &offset) != 0) {
-        g_string_printf(res, "<unknown - can't get proc info>");
-        return -2;
-    }
-
-    g_string_printf(res, "%s+0x%"PRIx64, sym, offset);
-    return 0;
-}
-
-static inline __attribute__((always_inline))
-const char *qemu_get_caller(void)
-{
-    static __thread GString *info;
-    if (!info) {
-        info = g_string_new(0);
-    }
-    unwind_caller(info);
-    return info->str;
-}
 
 /**
  * Platforms which do not support system() return ENOSYS
