@@ -66,30 +66,42 @@ jobs:
           podman run --rm -it -v $(pwd):$(pwd) -w $(pwd)
           docker.io/pbolinaro/qemu-ci:debian-amd64-cross
           bash -cx './configure $QEMU_CONFIGURE_OPTS && ninja -C build install'
+      - run: >
+          podman run --rm -it -v $(pwd):$(pwd) -w $(pwd)
+          docker.io/pbolinaro/qemu-ci:debian-amd64-cross
+          ./build/qemu-system-x86_64 -nographic -plugin ./build/contrib/plugins/libstoptrigger,icount=1000000 -plugin ./build/tests/tcg/plugins/libinsn -d plugin
 
   build-windows:
     needs: checkapply
     runs-on: windows-2022
+    strategy:
+      matrix:
+        include:
+          - { sys: UCRT64, env: ucrt-x86_64, compiler: gcc }
+          - { sys: CLANG64, env: clang-x86_64, compiler: clang }
+          # - { sys: CLANGARM64, env: clang-aarch64, compiler: clang }
+          - { sys: MINGW64, env: x86_64, compiler: gcc }
     steps:
       - uses: actions/checkout@v4
       - uses: msys2/setup-msys2@v2
         with:
+          msystem: ${{matrix.sys}}
           update: true
           install: >-
-            bison diffutils flex git grep make sed
-            mingw-w64-x86_64-binutils
-            mingw-w64-x86_64-ccache
-            mingw-w64-x86_64-curl
-            mingw-w64-x86_64-gcc
-            mingw-w64-x86_64-glib2
-            mingw-w64-x86_64-libnfs
-            mingw-w64-x86_64-libssh
-            mingw-w64-x86_64-ninja
-            mingw-w64-x86_64-pixman
-            mingw-w64-x86_64-pkgconf
-            mingw-w64-x86_64-python
-            mingw-w64-x86_64-zstd
-      - run: msys2 -c './configure && ninja -C build'
+            mingw-w64-${{matrix.env}}-${{matrix.compiler}}
+            binutils bison diffutils flex git grep make sed
+            mingw-w64-${{matrix.env}}-glib2
+            mingw-w64-${{matrix.env}}-gtk3
+            mingw-w64-${{matrix.env}}-libnfs
+            mingw-w64-${{matrix.env}}-libssh
+            mingw-w64-${{matrix.env}}-ninja
+            mingw-w64-${{matrix.env}}-pixman
+            mingw-w64-${{matrix.env}}-pkgconf
+            mingw-w64-${{matrix.env}}-python
+            mingw-w64-${{matrix.env}}-SDL2
+            mingw-w64-${{matrix.env}}-zstd
+      - run: set MSYSTEM=${{matrix.sys}} && msys2 -c './configure && ninja -C build'
+      - run: set MSYSTEM=${{matrix.sys}} && msys2 -c './build/qemu-system-x86_64 -nographic -plugin ./build/contrib/plugins/libstoptrigger,icount=1000000 -plugin ./build/tests/tcg/plugins/libinsn -d plugin'
 
   build-macos-x86_64:
     needs: checkapply
@@ -99,6 +111,7 @@ jobs:
       - run: brew install --quiet $(brew deps --include-build qemu)
       # on macos, werror is not on by default
       - run: ./configure --enable-werror && ninja -C build
+      - run: ./build/qemu-system-x86_64 -nographic -plugin ./build/contrib/plugins/libstoptrigger,icount=1000000 -plugin ./build/tests/tcg/plugins/libinsn -d plugin
 
   build-macos-aarch64:
     needs: checkapply
@@ -108,6 +121,7 @@ jobs:
       - run: brew install --quiet $(brew deps --include-build qemu)
       # on macos, werror is not on by default
       - run: ./configure --enable-werror && ninja -C build
+      - run: ./build/qemu-system-x86_64 -nographic -plugin ./build/contrib/plugins/libstoptrigger,icount=1000000 -plugin ./build/tests/tcg/plugins/libinsn -d plugin
 
   build-misc:
     needs: checkapply
