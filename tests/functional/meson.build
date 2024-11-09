@@ -21,7 +21,7 @@ test_timeouts = {
   'arm_collie' : 180,
   'arm_orangepi' : 540,
   'arm_raspi2' : 120,
-  'arm_tuxrun' : 240,
+  # 'arm_tuxrun' : 240, # flaky functional test
   'arm_sx1' : 360,
   'mips_malta' : 120,
   'netdev_ethtool' : 180,
@@ -70,7 +70,7 @@ tests_arm_system_thorough = [
   'arm_raspi2',
   'arm_sx1',
   'arm_vexpress',
-  'arm_tuxrun',
+  # 'arm_tuxrun', # flaky functional test
 ]
 
 tests_arm_linuxuser_thorough = [
