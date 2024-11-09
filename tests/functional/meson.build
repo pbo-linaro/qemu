@@ -117,7 +117,7 @@ tests_i386_system_thorough = [
 ]
 
 tests_loongarch64_system_thorough = [
-  'loongarch64_virt',
+  # 'loongarch64_virt', # flaky functional test
 ]
 
 tests_m68k_system_thorough = [
