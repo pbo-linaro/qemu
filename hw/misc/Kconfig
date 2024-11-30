@@ -30,6 +30,19 @@ config EDU
     default y if TEST_DEVICES
     depends on PCI && MSI_NONBROKEN
 
+config TDISP_TESTDEV
+    bool
+    default y if TEST_DEVICES
+    depends on PCI
+
+config PCA9552
+    bool
+    depends on I2C
+
+config PCA9554
+    bool
+    depends on I2C
+
 config I2C_ECHO
     bool
     default y if TEST_DEVICES
