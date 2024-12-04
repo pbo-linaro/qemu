@@ -300,7 +300,7 @@ qos_test_ss.add(
   'nvme-test.c',
   'pca9552-test.c',
   'pci-test.c',
-  'pcie-test.c',
+  'tdisp-test.c',
   'pcnet-test.c',
   'sdhci-test.c',
   'spapr-phb-test.c',
