@@ -3788,6 +3788,7 @@ if have_block
 endif
 
 common_ss.add(files('cpu-common.c'))
+common_ss.add(files('sanitizer.c'))
 specific_ss.add(files('cpu-target.c'))
 
 subdir('system')
