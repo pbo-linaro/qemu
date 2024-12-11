@@ -19,6 +19,7 @@ test_timeouts = {
   'aarch64_sbsaref_freebsd' : 720,
   'aarch64_tuxrun' : 240,
   'aarch64_virt' : 720,
+  'aarch64_virt_windows' : 720,
   'acpi_bits' : 420,
   'arm_aspeed_palmetto' : 120,
   'arm_aspeed_romulus' : 120,
@@ -84,6 +85,7 @@ tests_aarch64_system_thorough = [
   'aarch64_virt',
   'aarch64_xen',
   'aarch64_xlnx_versal',
+  'aarch64_virt_windows',
   'multiprocess',
 ]
 
