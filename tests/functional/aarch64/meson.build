@@ -15,6 +15,7 @@ test_aarch64_timeouts = {
   'tuxrun' : 240,
   'virt' : 360,
   'virt_gpu' : 480,
+  'virt_windows' : 480,
 }
 
 tests_aarch64_system_quick = [
@@ -44,6 +45,7 @@ tests_aarch64_system_thorough = [
   'tuxrun',
   'virt',
   'virt_gpu',
+  #'virt_windows', # need to renew asset
   'xen',
   'xlnx_versal',
 ]
