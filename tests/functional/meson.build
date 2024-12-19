@@ -200,7 +200,7 @@ tests_riscv64_system_thorough = [
 ]
 
 tests_rx_system_thorough = [
-  'rx_gdbsim',
+  #'rx_gdbsim', assets not available anymore
 ]
 
 tests_s390x_system_thorough = [
