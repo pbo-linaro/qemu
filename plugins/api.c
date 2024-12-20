@@ -92,6 +92,7 @@ void qemu_plugin_register_vcpu_exit_cb(qemu_plugin_id_t id,
 
 static bool tb_is_mem_only(void)
 {
+    return false;
     return tb_cflags(tcg_ctx->gen_tb) & CF_MEMI_ONLY;
 }
 
