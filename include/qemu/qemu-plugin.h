@@ -180,6 +180,7 @@ enum qemu_plugin_discon_type {
  * typedef qemu_plugin_vcpu_discon_cb_t - vcpu discontinuity callback
  * @vcpu_index: the current vcpu context
  * @type: the type of discontinuity
+ * @id: id
  * @from_pc: the source of the discontinuity, e.g. the PC before the
  *           transition
  * @to_pc: the PC pointing to the next instruction to be executed
@@ -277,6 +278,7 @@ void qemu_plugin_register_vcpu_resume_cb(qemu_plugin_id_t id,
  * qemu_plugin_register_vcpu_discon_cb() - register a discontinuity callback
  * @id: plugin ID
  * @cb: callback function
+ * @type: type
  *
  * The @cb function is called every time a vCPU receives a discontinuity event
  * of the specified type(s), after the vCPU was prepared to handle the event.
