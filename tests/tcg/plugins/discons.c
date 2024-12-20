@@ -56,6 +56,11 @@ static void vcpu_tb_trans(qemu_plugin_id_t id, struct qemu_plugin_tb *tb)
     size_t i;
     size_t n_insns = qemu_plugin_tb_n_insns(tb);
 
+    g_autoptr(GString) s = g_string_new("");
+    uint64_t vaddr = qemu_plugin_tb_vaddr(tb);
+    g_string_append_printf(s, "translate 0x%"PRIx64", %"PRIu64" insn\n", vaddr, n_insns);
+    qemu_plugin_outs(s->str);
+
     for (i = 0; i < n_insns; i++) {
         struct qemu_plugin_insn *insn = qemu_plugin_tb_get_insn(tb, i);
         uint64_t pc = qemu_plugin_insn_vaddr(insn);
