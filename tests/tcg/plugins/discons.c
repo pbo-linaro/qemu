@@ -12,10 +12,12 @@ QEMU_PLUGIN_EXPORT int qemu_plugin_version = QEMU_PLUGIN_VERSION;
 
 struct cpu_state {
     uint64_t next_pc;
+    uint64_t current_pc;
     bool has_next;
 };
 
 static struct qemu_plugin_scoreboard *states;
+static qemu_plugin_u64 current_pc;
 
 static bool abort_on_mismatch;
 
@@ -31,7 +33,7 @@ static void vcpu_discon(qemu_plugin_id_t id, unsigned int vcpu_index,
 static void insn_exec(unsigned int vcpu_index, void *userdata)
 {
     struct cpu_state *state = qemu_plugin_scoreboard_find(states, vcpu_index);
-    uint64_t pc = (uint64_t) userdata;
+    uint64_t pc = state->current_pc;
     GString *report;
 
     if (state->has_next) {
@@ -66,9 +68,10 @@ static void vcpu_tb_trans(qemu_plugin_id_t id, struct qemu_plugin_tb *tb)
         uint64_t pc = qemu_plugin_insn_vaddr(insn);
         g_string_printf(s, "instr insn 0x%"PRIx64"\n", pc);
         qemu_plugin_outs(s->str);
+        qemu_plugin_register_vcpu_insn_exec_inline_per_vcpu(insn,
+                QEMU_PLUGIN_INLINE_STORE_U64, current_pc, pc);
         qemu_plugin_register_vcpu_insn_exec_cb(insn, insn_exec,
-                                               QEMU_PLUGIN_CB_NO_REGS,
-                                               (void *) pc);
+                                               QEMU_PLUGIN_CB_NO_REGS, NULL);
     }
 }
 
@@ -93,6 +96,8 @@ QEMU_PLUGIN_EXPORT int qemu_plugin_install(qemu_plugin_id_t id,
     }
 
     states = qemu_plugin_scoreboard_new(sizeof(struct cpu_state));
+    current_pc = qemu_plugin_scoreboard_u64_in_struct(states, struct cpu_state,
+                                                      current_pc);
 
     qemu_plugin_register_vcpu_discon_cb(id, QEMU_PLUGIN_DISCON_ALL,
                                         vcpu_discon);
