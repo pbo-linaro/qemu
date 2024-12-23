@@ -627,15 +627,18 @@ void cpu_io_recompile(CPUState *cpu, uintptr_t retaddr)
         cc->tcg_ops->io_recompile_replay_branch(cpu, tb)) {
         cpu->neg.icount_decr.u16.low++;
         n = 2;
+        /*
+         * Limit instrumentation to memory operations only (which execute after
+         * completion), so we don't double instrument the instruction.
+         */
+        n |= CF_MEMI_ONLY;
     }
 
     /*
-     * Exit the loop and potentially generate a new TB executing the
-     * just the I/O insns. We also limit instrumentation to memory
-     * operations only (which execute after completion) so we don't
-     * double instrument the instruction.
+     * Exit the loop and potentially generate a new TB executing just the
+     * I/O insns.
      */
-    cpu->cflags_next_tb = curr_cflags(cpu) | CF_MEMI_ONLY | n;
+    cpu->cflags_next_tb = curr_cflags(cpu) | n;
 
     if (qemu_loglevel_mask(CPU_LOG_EXEC)) {
         vaddr pc = cpu->cc->get_pc(cpu);
