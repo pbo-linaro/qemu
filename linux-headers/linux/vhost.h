@@ -235,4 +235,8 @@
  */
 #define VHOST_VDPA_GET_VRING_SIZE	_IOWR(VHOST_VIRTIO, 0x82,	\
 					      struct vhost_vring_state)
+
+/* Set virtio device status */
+#define VHOST_SET_STATUS		_IOW(VHOST_VIRTIO, 0xA0, __u8)
+
 #endif
