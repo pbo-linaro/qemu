@@ -2078,6 +2078,7 @@ F: docs/system/sriov.rst
 PCIE DOE
 M: Huai-Cheng Kuo <hchkuo@avery-design.com.tw>
 M: Chris Browy <cbrowy@avery-design.com>
+R: Michael Prantl <michael.prantl@hotmail.de>
 S: Supported
 F: include/hw/pci/pcie_doe.h
 F: hw/pci/pcie_doe.c
