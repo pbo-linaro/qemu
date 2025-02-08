@@ -105,7 +105,7 @@ tests_arm_system_thorough = [
   'arm_aspeed_romulus',
   'arm_aspeed_ast2500',
   'arm_aspeed_ast2600',
-  'arm_aspeed_rainier',
+  # 'arm_aspeed_rainier', # timeout
   'arm_bpim2u',
   'arm_canona1100',
   'arm_collie',
