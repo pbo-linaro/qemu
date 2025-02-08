@@ -162,7 +162,7 @@ tests_microblaze_system_thorough = [
 ]
 
 tests_microblazeel_system_thorough = [
-  'microblazeel_s3adsp1800'
+  # 'microblazeel_s3adsp1800' # HTTP Error 403: Forbidden
 ]
 
 tests_mips_system_thorough = [
