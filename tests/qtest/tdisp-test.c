@@ -211,7 +211,7 @@ static libspdm_return_t tdisp_testdev_send_message(
         return LIBSPDM_STATUS_SEND_FAIL;
     }
 
-    for (size_t index; index < message_size / sizeof(uint32_t); ++index) {
+    for (size_t index = 0; index < message_size / sizeof(uint32_t); ++index) {
         qpcie_config_writel(&dev->dev, PCI_EXP_DOE + PCI_EXP_DOE_WR_DATA_MBOX,
                             data[index]);
     }
