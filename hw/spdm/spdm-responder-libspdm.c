@@ -1,7 +1,7 @@
 #include "qemu/osdep.h"
 #include "qemu/error-report.h"
 #include "qapi/error.h"
-#include "qapi/qmp/qlist.h"
+#include "qobject/qlist.h"
 #include "hw/qdev-core.h"
 #include "hw/spdm/spdm-responder-libspdm.h"
 
