@@ -4,6 +4,7 @@ specific_ss.add(when: 'CONFIG_SYSTEM_ONLY', if_true: [files(
   'memory.c',
   'physmem.c',
   'watchpoint.c',
+  'main.c',
 )])
 
 system_ss.add(files(
