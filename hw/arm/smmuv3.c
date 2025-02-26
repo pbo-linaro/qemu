@@ -290,6 +290,7 @@ static void smmuv3_init_regs(SMMUv3State *s)
     }
     s->idr[3] = FIELD_DP32(s->idr[3], IDR3, RIL, 1);
     s->idr[3] = FIELD_DP32(s->idr[3], IDR3, BBML, 2);
+    s->idr[3] = FIELD_DP32(s->idr[3], IDR3, STT, 1); /* FEAT_TTST */
 
     s->idr[5] = FIELD_DP32(s->idr[5], IDR5, OAS, SMMU_IDR5_OAS); /* 44 bits */
     /* 4K, 16K and 64K granule support */
@@ -358,7 +359,11 @@ static int smmu_get_cd(SMMUv3State *s, STE *ste, SMMUTransCfg *cfg,
 
     trace_smmuv3_get_cd(addr);
 
+    if (cfg->stage == SMMU_STAGE_2) {
+        g_assert_not_reached();
+    }
     if (cfg->stage == SMMU_NESTED) {
+        g_assert_not_reached();
         status = smmuv3_do_translate(s, addr, cfg, event,
                                      IOMMU_RO, &entry, SMMU_CLASS_CD);
 
@@ -397,6 +402,7 @@ static int smmu_get_cd(SMMUv3State *s, STE *ste, SMMUTransCfg *cfg,
  */
 static bool s2t0sz_valid(SMMUTransCfg *cfg)
 {
+    abort();
     if (cfg->s2cfg.tsz > 39) {
         return false;
     }
