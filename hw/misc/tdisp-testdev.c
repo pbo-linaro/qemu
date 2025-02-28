@@ -125,6 +125,7 @@ static void tdisp_testdev_realize(PCIDevice *pdev, Error **errp)
     memory_region_init_io(&d->mmio, OBJECT(d), &mmio_ops, d,
         "tdisp-testdev-mmio", 4 * KiB);
     pci_register_bar(pdev, 0, PCI_BASE_ADDRESS_SPACE_MEMORY, &d->mmio);
+    pcie_endpoint_cap_init(pdev, 0);
     pcie_doe_init(pdev, &pdev->doe_spdm, PCI_CONFIG_SPACE_SIZE, doe_protocols,
         true, 0);
 
