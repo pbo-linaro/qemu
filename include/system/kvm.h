@@ -214,10 +214,10 @@ int kvm_check_extension(KVMState *s, unsigned int extension);
 
 int kvm_vm_ioctl(KVMState *s, unsigned long type, ...);
 
+void kvm_flush_coalesced_mmio_buffer(void);
+
 #ifdef COMPILING_PER_TARGET
 #include "cpu.h"
-
-void kvm_flush_coalesced_mmio_buffer(void);
 
 /**
  * kvm_update_guest_debug(): ensure KVM debug structures updated
