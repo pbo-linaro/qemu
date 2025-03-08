@@ -13,6 +13,8 @@
 #include "qapi/error.h"
 #include "exec/address-spaces.h"
 #include "exec/memory.h"
+#include "exec/target_page.h"
+#include "linux/kvm.h"
 #include "system/kvm.h"
 #include "qemu/bitops.h"
 #include "qemu/error-report.h"
@@ -23,8 +25,6 @@
 #include "hw/hyperv/hyperv.h"
 #include "qom/object.h"
 #include "target/i386/kvm/hyperv-proto.h"
-#include "target/i386/cpu.h"
-#include "exec/cpu-all.h"
 
 struct SynICState {
     DeviceState parent_obj;
@@ -817,7 +817,7 @@ uint16_t hyperv_hcall_retreive_dbg_data(uint64_t ingpa, uint64_t outgpa,
 
     msg.type = HV_SYNDBG_MSG_RECV;
     msg.u.recv.buf_gpa = outgpa + sizeof(*debug_data_out);
-    msg.u.recv.count = TARGET_PAGE_SIZE - sizeof(*debug_data_out);
+    msg.u.recv.count = qemu_target_page_size() - sizeof(*debug_data_out);
     msg.u.recv.options = debug_data_in->options;
     msg.u.recv.timeout = debug_data_in->timeout;
     msg.u.recv.is_raw = true;
@@ -867,7 +867,7 @@ uint16_t hyperv_hcall_post_dbg_data(uint64_t ingpa, uint64_t outgpa, bool fast)
         goto cleanup;
     }
 
-    if (post_data_in->count > TARGET_PAGE_SIZE - sizeof(*post_data_in)) {
+    if (post_data_in->count > qemu_target_page_size() - sizeof(*post_data_in)) {
         ret = HV_STATUS_INVALID_PARAMETER;
         goto cleanup;
     }
