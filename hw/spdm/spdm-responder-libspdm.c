@@ -32,6 +32,8 @@
 
 #define CERTS_PROP "certs"
 #define KEYS_PROP  "keys"
+#define BASE_ASYM_ALGO_PROP "base-asym-algo"
+#define BASE_HASH_ALGO_PROP "base-hash-algo"
 
 typedef struct Slot {
     /* Public certificate chain */
@@ -688,6 +690,7 @@ static void spdm_responder_libspdm_complete(UserCreatable *obj, Error **errp)
         return;
     }
 
+    g_assert(responder->base_asym_algo);
     status = libspdm_set_data(responder->spdm_context,
         LIBSPDM_DATA_BASE_ASYM_ALGO, &parameter, &responder->base_asym_algo,
         sizeof(responder->base_asym_algo));
@@ -699,6 +702,7 @@ static void spdm_responder_libspdm_complete(UserCreatable *obj, Error **errp)
         return;
     }
 
+    g_assert(responder->base_hash_algo);
     status = libspdm_set_data(responder->spdm_context,
         LIBSPDM_DATA_BASE_HASH_ALGO, &parameter, &responder->base_hash_algo,
         sizeof(responder->base_hash_algo));
@@ -1036,6 +1040,69 @@ static void spdm_responder_libspdm_set_keys(
     visit_end_list(v, (void **)&list);
 }
 
+static void spdm_responder_libspdm_set_base_asym_algo(
+    Object *obj, const char *s, Error **errp)
+{
+    ERRP_GUARD();
+    SPDMResponderLibspdm *responder = SPDM_RESPONDER_LIBSDPM(obj);
+
+    uint32_t a;
+    if (!g_strcmp0(s, "rsa-2048")) {
+        a = SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_RSASSA_2048;
+    } else if (!g_strcmp0(s, "rsa-3072")) {
+        a = SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_RSASSA_3072;
+    } else if (!g_strcmp0(s, "rsa-4096")) {
+        a = SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_RSASSA_4096;
+    } else if (!g_strcmp0(s, "rsa-pss-2048")) {
+        a = SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_RSAPSS_2048;
+    } else if (!g_strcmp0(s, "rsa-pss-3072")) {
+        a = SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_RSAPSS_3072;
+    } else if (!g_strcmp0(s, "rsa-pss-4096")) {
+        a = SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_RSAPSS_4096;
+    } else if (!g_strcmp0(s, "ecdsa-p256")) {
+        a = SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_ECDSA_ECC_NIST_P256;
+    } else if (!g_strcmp0(s, "ecdsa-p384")) {
+        a = SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_ECDSA_ECC_NIST_P384;
+    } else if (!g_strcmp0(s, "ecdsa-p521")) {
+        a = SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_ECDSA_ECC_NIST_P521;
+    } else {
+        error_report("unknown base-asym-algo, available are: "
+                     "rsa-2048, rsa-3072, rsa-4096, "
+                     "rsa-pss-2048, rsa-pss-3072, rsa-pss-4096, "
+                     "ecdsa-p256, ecdsa-p384, ecdsa-p521");
+        exit(1);
+    }
+    responder->base_asym_algo = a;
+}
+
+static void spdm_responder_libspdm_set_base_hash_algo(
+    Object *obj, const char *s, Error **errp)
+{
+    ERRP_GUARD();
+    SPDMResponderLibspdm *responder = SPDM_RESPONDER_LIBSDPM(obj);
+
+    uint32_t a;
+    if (!g_strcmp0(s, "sha-256")) {
+        a = SPDM_ALGORITHMS_BASE_HASH_ALGO_TPM_ALG_SHA_256;
+    } else if (!g_strcmp0(s, "sha-384")) {
+        a = SPDM_ALGORITHMS_BASE_HASH_ALGO_TPM_ALG_SHA_384;
+    } else if (!g_strcmp0(s, "sha-512")) {
+        a = SPDM_ALGORITHMS_BASE_HASH_ALGO_TPM_ALG_SHA_512;
+    } else if (!g_strcmp0(s, "sha3-256")) {
+        a = SPDM_ALGORITHMS_BASE_HASH_ALGO_TPM_ALG_SHA3_256;
+    } else if (!g_strcmp0(s, "sha3-384")) {
+        a = SPDM_ALGORITHMS_BASE_HASH_ALGO_TPM_ALG_SHA3_384;
+    } else if (!g_strcmp0(s, "sha3-512")) {
+        a = SPDM_ALGORITHMS_BASE_HASH_ALGO_TPM_ALG_SHA3_512;
+    } else {
+        error_report("unknown base-hash-algo, available are: "
+                     "sha-256, sha-384, sha-512, "
+                     "sha3-256, sha3-384, sha3-512");
+        exit(1);
+    }
+    responder->base_hash_algo = a;
+}
+
 static void spdm_responder_libspdm_init(Object *obj)
 {
     SPDMResponderLibspdm *responder = SPDM_RESPONDER_LIBSDPM(obj);
@@ -1046,13 +1113,6 @@ static void spdm_responder_libspdm_init(Object *obj)
         SPDM_GET_CAPABILITIES_RESPONSE_FLAGS_MAC_CAP |
         SPDM_GET_CAPABILITIES_RESPONSE_FLAGS_KEY_EX_CAP |
         SPDM_GET_CAPABILITIES_RESPONSE_FLAGS_CHUNK_CAP;
-    responder->base_asym_algo =
-        SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_RSASSA_3072 |
-        SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_ECDSA_ECC_NIST_P256 |
-        SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_ECDSA_ECC_NIST_P384;
-    responder->base_hash_algo =
-        SPDM_ALGORITHMS_BASE_HASH_ALGO_TPM_ALG_SHA_256 |
-        SPDM_ALGORITHMS_BASE_HASH_ALGO_TPM_ALG_SHA_384;
     responder->dhe_named_group = SPDM_ALGORITHMS_DHE_NAMED_GROUP_FFDHE_2048 |
         SPDM_ALGORITHMS_DHE_NAMED_GROUP_FFDHE_3072 |
         SPDM_ALGORITHMS_DHE_NAMED_GROUP_FFDHE_4096 |
@@ -1138,4 +1198,14 @@ static void spdm_responder_libspdm_class_init(ObjectClass *klass, void *data)
         NULL);
     object_class_property_set_description(klass, KEYS_PROP,
         "List of file paths to SPDM responder device private keys");
+
+    property = object_class_property_add_str(klass, BASE_ASYM_ALGO_PROP,
+        NULL, spdm_responder_libspdm_set_base_asym_algo);
+    object_class_property_set_description(klass, BASE_ASYM_ALGO_PROP,
+        "BaseAsymAlgo used (it has to match your certificates)");
+
+    property = object_class_property_add_str(klass, BASE_HASH_ALGO_PROP,
+        NULL, spdm_responder_libspdm_set_base_hash_algo);
+    object_class_property_set_description(klass, BASE_HASH_ALGO_PROP,
+        "BaseHashAlgo used (it has to match your certificates)");
 }

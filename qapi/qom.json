@@ -948,13 +948,19 @@
 #
 # @keys: list of paths to SPDM responder device private keys
 #
+# @base-asym-algo: BaseAsymAlgo to use
+#
+# @base-hash-algo: BaseHashAlgo to use
+#
 # Since: 9.2
 ##
 { 'struct': 'SPDMResponderLibspdmProperties',
   'data': { '*data-transfer-size': 'uint32',
             '*max-spdm-msg-size': 'uint32',
             'certs': [ 'str' ],
-            'keys': [ 'str' ] },
+            'keys': [ 'str' ],
+            'base-asym-algo': 'str',
+            'base-hash-algo': 'str' },
   'if': 'CONFIG_LIBSPDM' }
 
 ##
