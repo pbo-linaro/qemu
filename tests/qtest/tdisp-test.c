@@ -565,7 +565,9 @@ static void tdisp_testdev_register_driver(void)
             "certs=tests/data/tdisp/ecp256/device.certchain.der,"
             "keys=tests/data/tdisp/ecp256/device.key,"
             "certs=tests/data/tdisp/ecp384/device.certchain.der,"
-            "keys=tests/data/tdisp/ecp384/device.key",
+            "keys=tests/data/tdisp/ecp384/device.key,"
+            "base-asym-algo=rsa-3072,"
+            "base-hash-algo=sha-384"
     };
     QPCIAddress addr = {
         .devfn = QPCI_DEVFN(0 , 0),
