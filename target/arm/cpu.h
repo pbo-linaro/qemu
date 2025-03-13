@@ -975,7 +975,7 @@ struct ArchCPU {
      */
     uint32_t kvm_target;
 
-#ifdef CONFIG_KVM
+#if 1 /* #ifdef CONFIG_KVM */
     /* KVM init features for this CPU */
     uint32_t kvm_init_features[7];
 
