@@ -4064,6 +4064,9 @@ common_all = static_library('common',
                             sources: common_ss.all_sources() + genh,
                             include_directories: common_user_inc,
                             implicit_include_directories: false,
+                            # prevent common code to access cpu compile time
+                            # definition, but still allow access to cpu.h
+                            c_args: ['-DCPU_DEFS_H'],
                             dependencies: common_ss.all_dependencies())
 
 if have_rust
