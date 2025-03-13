@@ -170,11 +170,7 @@ static uint64_t sun4u_load_kernel(const char *kernel_filename,
     if (linux_boot) {
         int bswap_needed;
 
-#ifdef BSWAP_NEEDED
-        bswap_needed = 1;
-#else
-        bswap_needed = 0;
-#endif
+        bswap_needed = HOST_BIG_ENDIAN != TARGET_BIG_ENDIAN;
         kernel_size = load_elf(kernel_filename, NULL, NULL, NULL, kernel_entry,
                                kernel_addr, &kernel_top, NULL,
                                ELFDATA2MSB, EM_SPARCV9, 0, 0);

@@ -155,9 +155,7 @@ static void ppc_heathrow_init(MachineState *machine)
     if (machine->kernel_filename) {
         int bswap_needed = 0;
 
-#ifdef BSWAP_NEEDED
-        bswap_needed = 1;
-#endif
+        bswap_needed = HOST_BIG_ENDIAN != TARGET_BIG_ENDIAN;
         kernel_base = KERNEL_LOAD_ADDR;
         kernel_size = load_elf(machine->kernel_filename, NULL,
                                translate_kernel_address, NULL, NULL, NULL,

@@ -235,11 +235,7 @@ static unsigned long sun4m_load_kernel(const char *kernel_filename,
     if (linux_boot) {
         int bswap_needed;
 
-#ifdef BSWAP_NEEDED
-        bswap_needed = 1;
-#else
-        bswap_needed = 0;
-#endif
+        bswap_needed = HOST_BIG_ENDIAN != TARGET_BIG_ENDIAN;
         kernel_size = load_elf(kernel_filename, NULL,
                                translate_kernel_address, NULL,
                                NULL, NULL, NULL, NULL,
