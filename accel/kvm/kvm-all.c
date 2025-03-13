@@ -13,6 +13,10 @@
  *
  */
 
+#ifdef TARGET_AARCH64
+#define KVM_HAVE_MCE_INJECTION 1
+#endif
+
 #include "qemu/osdep.h"
 #include <sys/ioctl.h>
 #include <poll.h>
