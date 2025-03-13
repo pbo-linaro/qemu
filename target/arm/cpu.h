@@ -31,6 +31,8 @@
 #include "target/arm/multiprocessing.h"
 #include "target/arm/gtimer.h"
 
+#define CPU_INCLUDE "target/arm/cpu.h"
+
 #ifdef TARGET_AARCH64
 #define KVM_HAVE_MCE_INJECTION 1
 #endif
