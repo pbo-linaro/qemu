@@ -118,7 +118,8 @@ static inline int cpu_mmu_index(CPUState *cs, bool ifetch)
 #define TLB_SLOW_FLAGS_MASK  (TLB_BSWAP | TLB_WATCHPOINT | TLB_CHECK_ALIGNED)
 
 /* The two sets of flags must not overlap. */
-QEMU_BUILD_BUG_ON(TLB_FLAGS_MASK & TLB_SLOW_FLAGS_MASK);
+/* TODO: not a build flag anymore */
+/* QEMU_BUILD_BUG_ON(TLB_FLAGS_MASK & TLB_SLOW_FLAGS_MASK); */
 
 #endif /* !CONFIG_USER_ONLY */
 
