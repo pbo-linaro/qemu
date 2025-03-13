@@ -36,8 +36,10 @@
  * TARGET_BIG_ENDIAN : same for the target cpu
  */
 
-#if HOST_BIG_ENDIAN != TARGET_BIG_ENDIAN
-#define BSWAP_NEEDED
+#ifdef COMPILING_PER_TARGET
+# if HOST_BIG_ENDIAN != TARGET_BIG_ENDIAN
+#  define BSWAP_NEEDED
+# endif
 #endif
 
 /* page related stuff */
