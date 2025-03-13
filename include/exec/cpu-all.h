@@ -48,7 +48,11 @@
 
 CPUArchState *cpu_copy(CPUArchState *env);
 
+#ifdef CPU_INCLUDE
+#include CPU_INCLUDE
+#else
 #include "cpu.h"
+#endif
 
 #ifdef CONFIG_USER_ONLY
 
