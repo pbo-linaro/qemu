@@ -108,8 +108,10 @@ CPUArchState *cpu_copy(CPUArchState *env);
 
 #define TLB_SLOW_FLAGS_MASK  (TLB_BSWAP | TLB_WATCHPOINT | TLB_CHECK_ALIGNED)
 
+#ifdef COMPILING_PER_TARGET
 /* The two sets of flags must not overlap. */
 QEMU_BUILD_BUG_ON(TLB_FLAGS_MASK & TLB_SLOW_FLAGS_MASK);
+#endif
 
 #endif /* !CONFIG_USER_ONLY */
 
