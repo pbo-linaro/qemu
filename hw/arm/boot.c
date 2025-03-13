@@ -23,6 +23,7 @@
 #include "hw/loader.h"
 #include "elf.h"
 #include "system/device_tree.h"
+#include "target/arm/cpu.h"
 #include "qemu/config-file.h"
 #include "qemu/option.h"
 #include "qemu/units.h"
