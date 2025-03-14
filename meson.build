@@ -3690,6 +3690,8 @@ hw_arch = {}
 target_arch = {}
 target_system_arch = {}
 target_user_arch = {}
+arch_system = {}
+arch_user = {}
 
 # NOTE: the trace/ subdirectory needs the qapi_trace_events variable
 # that is filled in by qapi/.
@@ -4064,10 +4066,53 @@ common_all = static_library('common',
                             sources: common_ss.all_sources() + genh,
                             include_directories: common_user_inc,
                             implicit_include_directories: false,
-                            # prevent common code to access cpu compile time
-                            # definition, but still allow access to cpu.h
-                            c_args: ['-DCPU_DEFS_H'],
                             dependencies: common_ss.all_dependencies())
+
+# construct libraries (user, system) per base architecture
+arch_user_libs = {}
+arch_system_libs = {}
+foreach target : target_dirs
+  config_target = config_target_mak[target]
+  target_base_arch = config_target['TARGET_BASE_ARCH']
+
+  # check if already generated
+  if target_base_arch in arch_user_libs
+    continue
+  endif
+  if target_base_arch in arch_system_libs
+    continue
+  endif
+
+  if target_base_arch in arch_user
+    arch_user_ss = arch_user[target_base_arch]
+    arch_user_lib = static_library(
+      'user_' + target_base_arch,
+      build_by_default: false,
+      sources: arch_user_ss.all_sources(),
+      include_directories: common_user_inc,
+      implicit_include_directories: false,
+      # prevent common code to access cpu compile time
+      # definition, but still allow access to cpu.h
+      c_args: ['-DCPU_DEFS_H', '-DCONFIG_USER_ONLY'],
+      dependencies: arch_user_ss.all_dependencies())
+    arch_user_libs += {target_base_arch: arch_user_lib}
+  endif
+
+  if target_base_arch in arch_system
+    arch_system_ss = arch_system[target_base_arch]
+    arch_system_lib = static_library(
+      'system_' + target_base_arch,
+      build_by_default: false,
+      sources: arch_system_ss.all_sources(),
+      include_directories: common_user_inc,
+      implicit_include_directories: false,
+      # prevent common code to access cpu compile time
+      # definition, but still allow access to cpu.h
+      c_args: ['-DCPU_DEFS_H', '-DCONFIG_SOFTMMU'],
+      dependencies: arch_system_ss.all_dependencies())
+    arch_system_libs += {target_base_arch: arch_system_lib}
+  endif
+endforeach
 
 if have_rust
   # We would like to use --generate-cstr, but it is only available
@@ -4234,8 +4279,22 @@ foreach target : target_dirs
   arch_deps += t.dependencies()
 
   target_common = common_ss.apply(config_target, strict: false)
-  objects = common_all.extract_objects(target_common.sources())
+  objects = [common_all.extract_objects(target_common.sources())]
   arch_deps += target_common.dependencies()
+  if target_type == 'user' and target_base_arch in arch_user_libs
+    arch_ss = arch_user[target_base_arch]
+    arch_lib = arch_user_libs[target_base_arch]
+    arch_sources = arch_ss.apply(config_target, strict: false)
+    objects += arch_lib.extract_objects(arch_sources.sources())
+    arch_deps += arch_sources.dependencies()
+  endif
+  if target_type == 'system' and target_base_arch in arch_system_libs
+    arch_ss = arch_system[target_base_arch]
+    arch_lib = arch_system_libs[target_base_arch]
+    arch_sources = arch_ss.apply(config_target, strict: false)
+    objects += arch_lib.extract_objects(arch_sources.sources())
+    arch_deps += arch_sources.dependencies()
+  endif
 
   target_specific = specific_ss.apply(config_target, strict: false)
   arch_srcs += target_specific.sources()

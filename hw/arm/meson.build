@@ -1,4 +1,5 @@
 arm_ss = ss.source_set()
+arm_system_ss = ss.source_set()
 arm_ss.add(when: 'CONFIG_ARM_VIRT', if_true: files('virt.c'))
 arm_ss.add(when: 'CONFIG_ACPI', if_true: files('virt-acpi-build.c'))
 arm_ss.add(when: 'CONFIG_DIGIC', if_true: files('digic_boards.c'))
@@ -74,11 +75,10 @@ system_ss.add(when: 'CONFIG_SX1', if_true: files('omap_sx1.c'))
 system_ss.add(when: 'CONFIG_VERSATILE', if_true: files('versatilepb.c'))
 system_ss.add(when: 'CONFIG_VEXPRESS', if_true: files('vexpress.c'))
 
-arm_common = files(
+arm_system_ss.add(files(
 'boot.c',
 'common.c',
-)
-system_ss.add(when: ['TARGET_ARM'], if_true: arm_common)
-system_ss.add(when: ['TARGET_AARCH64'], if_true: arm_common)
+))
 
 hw_arch += {'arm': arm_ss}
+arch_system += {'arm': arm_system_ss}
