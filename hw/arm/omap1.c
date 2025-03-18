@@ -22,7 +22,7 @@
 #include "qemu/error-report.h"
 #include "qemu/main-loop.h"
 #include "qapi/error.h"
-#include "cpu.h"
+#include "target/arm/cpu.h"
 #include "system/address-spaces.h"
 #include "hw/hw.h"
 #include "hw/irq.h"
