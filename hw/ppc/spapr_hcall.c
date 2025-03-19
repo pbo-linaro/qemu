@@ -1,6 +1,7 @@
 #include "qemu/osdep.h"
 #include "qemu/cutils.h"
 #include "qapi/error.h"
+#include "exec/target_page.h"
 #include "system/hw_accel.h"
 #include "system/runstate.h"
 #include "system/tcg.h"

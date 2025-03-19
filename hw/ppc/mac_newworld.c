@@ -59,6 +59,7 @@
 #include "hw/ppc/mac_dbdma.h"
 #include "hw/pci/pci.h"
 #include "net/net.h"
+#include "exec/target_page.h"
 #include "system/system.h"
 #include "hw/nvram/fw_cfg.h"
 #include "hw/char/escc.h"

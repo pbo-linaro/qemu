@@ -32,6 +32,7 @@
 #include "hw/qdev-properties.h"
 #include "hw/boards.h"
 #include "hw/input/adb.h"
+#include "exec/target_page.h"
 #include "system/system.h"
 #include "net/net.h"
 #include "hw/isa/isa.h"

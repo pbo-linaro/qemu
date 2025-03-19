@@ -23,6 +23,7 @@
 #include "hw/s390x/s390-pci-kvm.h"
 #include "hw/s390x/s390-pci-vfio.h"
 #include "hw/s390x/tod.h"
+#include "exec/target_page.h"
 
 #include "trace.h"
 
