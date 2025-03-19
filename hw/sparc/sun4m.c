@@ -35,6 +35,7 @@
 #include "migration/vmstate.h"
 #include "hw/sparc/sparc32_dma.h"
 #include "hw/block/fdc.h"
+#include "exec/target_page.h"
 #include "system/reset.h"
 #include "system/runstate.h"
 #include "system/system.h"

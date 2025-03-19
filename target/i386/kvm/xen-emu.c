@@ -14,6 +14,7 @@
 #include "qemu/main-loop.h"
 #include "qemu/error-report.h"
 #include "hw/xen/xen.h"
+#include "exec/target_page.h"
 #include "system/kvm_int.h"
 #include "system/kvm_xen.h"
 #include "kvm/kvm_i386.h"
