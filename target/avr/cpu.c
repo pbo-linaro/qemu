@@ -21,6 +21,7 @@
 #include "qemu/osdep.h"
 #include "qapi/error.h"
 #include "qemu/qemu-print.h"
+#include "exec/cpu-interrupt.h"
 #include "exec/exec-all.h"
 #include "exec/translation-block.h"
 #include "system/address-spaces.h"
