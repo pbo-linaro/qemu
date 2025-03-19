@@ -26,6 +26,7 @@
 #include "hw/pci/msi.h"
 #include "qemu/error-report.h"
 #include "qemu/module.h"
+#include "exec/target_page.h"
 #include "system/reset.h"
 #include "system/runstate.h"
 

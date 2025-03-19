@@ -27,6 +27,7 @@
 #include "qemu/error-report.h"
 #include "qemu/host-utils.h"
 #include "qom/object.h"
+#include "exec/target_page.h"
 
 #include "cpu_bits.h"
 #include "riscv-iommu.h"

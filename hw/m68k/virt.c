@@ -14,6 +14,7 @@
 #include "cpu.h"
 #include "hw/boards.h"
 #include "hw/qdev-properties.h"
+#include "exec/target_page.h"
 #include "elf.h"
 #include "hw/loader.h"
 #include "ui/console.h"

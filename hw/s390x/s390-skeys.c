@@ -19,6 +19,7 @@
 #include "qapi/qapi-commands-misc-target.h"
 #include "qobject/qdict.h"
 #include "qemu/error-report.h"
+#include "exec/target_page.h"
 #include "system/memory_mapping.h"
 #include "system/address-spaces.h"
 #include "system/kvm.h"

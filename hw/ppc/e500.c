@@ -26,6 +26,7 @@
 #include "hw/block/flash.h"
 #include "hw/char/serial-mm.h"
 #include "hw/pci/pci.h"
+#include "exec/target_page.h"
 #include "system/block-backend-io.h"
 #include "system/system.h"
 #include "system/kvm.h"
