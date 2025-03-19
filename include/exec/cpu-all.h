@@ -22,9 +22,6 @@
 #include "exec/cpu-common.h"
 #include "hw/core/cpu.h"
 
-/* page related stuff */
-#include "exec/target_page.h"
-
 #include "cpu.h"
 
 #endif /* CPU_ALL_H */

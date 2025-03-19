@@ -26,6 +26,7 @@
 #include "cpu.h"
 #include "hw/ppc/ppc.h"
 #include "qemu/timer.h"
+#include "exec/target_page.h"
 #include "system/reset.h"
 #include "system/runstate.h"
 #include "hw/loader.h"
