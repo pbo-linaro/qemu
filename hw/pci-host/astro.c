@@ -31,6 +31,7 @@
 #include "hw/qdev-properties.h"
 #include "hw/pci-host/astro.h"
 #include "hw/hppa/hppa_hardware.h"
+#include "exec/target_page.h"
 #include "migration/vmstate.h"
 #include "target/hppa/cpu.h"
 #include "trace.h"
