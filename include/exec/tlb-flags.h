@@ -20,6 +20,7 @@
 #define TLB_FLAGS_H
 
 #include "exec/cpu-defs.h"
+#include "exec/target_page.h"
 
 #ifdef CONFIG_USER_ONLY
 

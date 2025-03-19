@@ -24,6 +24,7 @@
 #include "exec/cpu_ldst.h"
 #endif
 #include "exec/mmu-access-type.h"
+#include "exec/target_page.h"
 #include "exec/translation-block.h"
 
 #if defined(CONFIG_TCG)

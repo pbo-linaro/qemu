@@ -25,6 +25,7 @@
 #include "migration/vmstate.h"
 #include "qapi/error.h"
 #include "qemu/timer.h"
+#include "exec/target_page.h"
 
 #include "cpu_bits.h"
 #include "riscv-iommu.h"
