@@ -28,6 +28,7 @@
 #include "exec/page-protection.h"
 #include "exec/cpu_ldst.h"
 #include "system/address-spaces.h"
+#include "system/memory.h"
 #include "exec/helper-proto.h"
 #include "qemu/plugin.h"
 
