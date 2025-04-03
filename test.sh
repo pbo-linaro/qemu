@@ -22,6 +22,7 @@ g++ -std=c++20 mt.cpp -O0 -o build/mt
 qemu_user=./build/qemu-$qemu_suffix
 qemu_system="./build/qemu-system-$qemu_suffix $qemu_system_args"
 bin="build/mt 17 1000" # 17 threads, 1000 iterations
+$qemu_user -plugin build/tests/tcg/plugins/libreset.so -d plugin "$@" $bin
 $qemu_user -plugin build/tests/tcg/plugins/libinline.so -d plugin "$@" $bin
 #$qemu_user -plugin build/tests/tcg/plugins/libinline.so "$@" \
 #  -d op,op_opt,in_asm,out_asm $bin |& head -n 1000 > build/plugin.on
