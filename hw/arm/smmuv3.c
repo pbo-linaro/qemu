@@ -263,7 +263,7 @@ static void smmuv3_init_regs(SMMUv3State *s)
     if (s->stage && !strcmp("2", s->stage)) {
         s->idr[0] = FIELD_DP32(s->idr[0], IDR0, S2P, 1);
     } else if (s->stage && !strcmp("nested", s->stage)) {
-        s->idr[0] = FIELD_DP32(s->idr[0], IDR0, S1P, 1);
+        s->idr[0] = FIELD_DP32(s->idr[0], IDR0, S1P, 0);
         s->idr[0] = FIELD_DP32(s->idr[0], IDR0, S2P, 1);
     } else {
         s->idr[0] = FIELD_DP32(s->idr[0], IDR0, S1P, 1);
@@ -359,6 +359,7 @@ static int smmu_get_cd(SMMUv3State *s, STE *ste, SMMUTransCfg *cfg,
     SMMUTLBEntry *entry;
 
     trace_smmuv3_get_cd(addr);
+    g_assert_not_reached();
 
     if (cfg->stage == SMMU_STAGE_2) {
         g_assert_not_reached();
@@ -403,7 +404,7 @@ static int smmu_get_cd(SMMUv3State *s, STE *ste, SMMUTransCfg *cfg,
  */
 static bool s2t0sz_valid(SMMUTransCfg *cfg)
 {
-    abort();
+    g_assert_not_reached();
     if (cfg->s2cfg.tsz > 39) {
         return false;
     }
@@ -842,11 +843,13 @@ static int smmuv3_decode_config(IOMMUMemoryRegion *mr, SMMUTransCfg *cfg,
 
     ret = smmu_find_ste(s, sid, &ste, event);
     if (ret) {
+        g_assert_not_reached();
         return ret;
     }
 
     ret = decode_ste(s, cfg, &ste, event);
     if (ret) {
+        g_assert_not_reached();
         return ret;
     }
 
