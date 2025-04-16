@@ -168,7 +168,7 @@ static void memory_dump(Monitor *mon, int count, int format, int wsize,
         if (is_physical) {
             monitor_printf(mon, HWADDR_FMT_plx ":", addr);
         } else {
-            monitor_printf(mon, TARGET_FMT_lx ":", (target_ulong)addr);
+            monitor_printf(mon, "%" VADDR_PRIX ":", (vaddr)addr);
         }
         l = len;
         if (l > line_size)
@@ -235,7 +235,7 @@ void hmp_memory_dump(Monitor *mon, const QDict *qdict)
     int count = qdict_get_int(qdict, "count");
     int format = qdict_get_int(qdict, "format");
     int size = qdict_get_int(qdict, "size");
-    target_long addr = qdict_get_int(qdict, "addr");
+    hwaddr addr = qdict_get_int(qdict, "addr");
 
     memory_dump(mon, count, format, size, addr, 0);
 }
@@ -301,7 +301,7 @@ void hmp_gpa2hva(Monitor *mon, const QDict *qdict)
 
 void hmp_gva2gpa(Monitor *mon, const QDict *qdict)
 {
-    target_ulong addr = qdict_get_int(qdict, "addr");
+    vaddr addr = qdict_get_int(qdict, "addr");
     CPUState *cs = mon_get_cpu(mon);
     hwaddr gpa;
 
