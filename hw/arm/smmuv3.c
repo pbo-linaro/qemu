@@ -263,7 +263,7 @@ static void smmuv3_init_regs(SMMUv3State *s)
     if (s->stage && !strcmp("2", s->stage)) {
         s->idr[0] = FIELD_DP32(s->idr[0], IDR0, S2P, 1);
     } else if (s->stage && !strcmp("nested", s->stage)) {
-        s->idr[0] = FIELD_DP32(s->idr[0], IDR0, S1P, 0);
+        s->idr[0] = FIELD_DP32(s->idr[0], IDR0, S1P, 1);
         s->idr[0] = FIELD_DP32(s->idr[0], IDR0, S2P, 1);
     } else {
         s->idr[0] = FIELD_DP32(s->idr[0], IDR0, S1P, 1);
@@ -291,7 +291,6 @@ static void smmuv3_init_regs(SMMUv3State *s)
     }
     s->idr[3] = FIELD_DP32(s->idr[3], IDR3, RIL, 1);
     s->idr[3] = FIELD_DP32(s->idr[3], IDR3, BBML, 2);
-    s->idr[3] = FIELD_DP32(s->idr[3], IDR3, STT, 1); /* FEAT_TTST */
 
     s->idr[5] = FIELD_DP32(s->idr[5], IDR5, OAS, SMMU_IDR5_OAS); /* 44 bits */
     /* 4K, 16K and 64K granule support */
@@ -359,13 +358,8 @@ static int smmu_get_cd(SMMUv3State *s, STE *ste, SMMUTransCfg *cfg,
     SMMUTLBEntry *entry;
 
     trace_smmuv3_get_cd(addr);
-    g_assert_not_reached();
 
-    if (cfg->stage == SMMU_STAGE_2) {
-        g_assert_not_reached();
-    }
     if (cfg->stage == SMMU_NESTED) {
-        g_assert_not_reached();
         status = smmuv3_do_translate(s, addr, cfg, event,
                                      IOMMU_RO, &entry, SMMU_CLASS_CD);
 
@@ -404,7 +398,6 @@ static int smmu_get_cd(SMMUv3State *s, STE *ste, SMMUTransCfg *cfg,
  */
 static bool s2t0sz_valid(SMMUTransCfg *cfg)
 {
-    g_assert_not_reached();
     if (cfg->s2cfg.tsz > 39) {
         return false;
     }
@@ -843,13 +836,11 @@ static int smmuv3_decode_config(IOMMUMemoryRegion *mr, SMMUTransCfg *cfg,
 
     ret = smmu_find_ste(s, sid, &ste, event);
     if (ret) {
-        g_assert_not_reached();
         return ret;
     }
 
     ret = decode_ste(s, cfg, &ste, event);
     if (ret) {
-        g_assert_not_reached();
         return ret;
     }
 
