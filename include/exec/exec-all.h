@@ -120,10 +120,6 @@ int probe_access_full_mmu(CPUArchState *env, vaddr addr, int size,
 #endif /* !CONFIG_USER_ONLY */
 #endif /* CONFIG_TCG */
 
-/* TranslationBlock invalidate API */
-void tb_invalidate_phys_range(CPUState *cpu, tb_page_addr_t start,
-                              tb_page_addr_t last);
-
 #if !defined(CONFIG_USER_ONLY)
 
 /**
