@@ -88,9 +88,7 @@ target_ulong page_find_range_empty(target_ulong min, target_ulong max,
 __attribute__((returns_nonnull))
 void *page_get_target_data(target_ulong address);
 
-typedef int (*walk_memory_regions_fn)(void *, target_ulong,
-                                      target_ulong, unsigned long);
-
+typedef int (*walk_memory_regions_fn)(void *, vaddr, vaddr, int);
 int walk_memory_regions(void *, walk_memory_regions_fn);
 
 void page_dump(FILE *f);
