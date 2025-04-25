@@ -4202,6 +4202,8 @@ if host_os == 'darwin'
 endif
 
 traceable = []
+single_binary_libs = []
+single_binary_deps = []
 emulators = {}
 foreach target : target_dirs
   config_target = config_target_mak[target]
@@ -4334,6 +4336,8 @@ foreach target : target_dirs
                  build_by_default: false)
 
   if target.endswith('-softmmu')
+    single_binary_libs += lib
+    single_binary_deps += arch_deps
     execs = [{
       'name': 'qemu-system-' + target_name,
       'win_subsystem': 'console',
@@ -4413,6 +4417,17 @@ foreach target : target_dirs
 
   endforeach
 endforeach
+
+single_binary_objects = []
+foreach lib: single_binary_libs
+  single_binary_objects += lib.extract_all_objects(recursive: true)
+endforeach
+executable('qemu-system',
+            sources: files('system/main.c'),
+            objects: single_binary_objects,
+            dependencies: single_binary_deps,
+            link_depends: [block_syms, qemu_syms],
+            build_by_default: false)
 
 # Other build targets
 
