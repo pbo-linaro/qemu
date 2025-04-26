@@ -38,4 +38,18 @@ const char *target_machine_typename(void);
  */
 const char *target_cpu_type(void);
 
+bool target_i386(void);
+bool target_x86_64(void);
+bool target_arm(void);
+bool target_aarch64(void);
+bool target_s390x(void);
+bool target_mips(void);
+bool target_mips64(void);
+bool target_loongarch64(void);
+bool target_riscv32(void);
+bool target_riscv64(void);
+bool target_ppc(void);
+bool target_ppc64(void);
+bool target_has_kvm(void);
+
 #endif
