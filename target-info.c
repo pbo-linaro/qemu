@@ -14,3 +14,12 @@ const char *target_name(void)
 {
     return target_info()->target_name;
 }
+
+bool target_aarch64(void)
+{
+#ifdef TARGET_AARCH64
+    return true;
+#else
+    return false;
+#endif
+}

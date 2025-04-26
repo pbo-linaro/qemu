@@ -23,4 +23,6 @@ const char *target_name(void);
  */
 const char *target_cpu_type(void);
 
+bool target_aarch64(void);
+
 #endif
