@@ -1733,7 +1733,7 @@ void HELPER(cpyfe)(CPUARMState *env, uint32_t syndrome, uint32_t wdesc,
     do_cpye(env, syndrome, wdesc, rdesc, false, GETPC());
 }
 
-static bool is_guarded_page(CPUARMState *env, target_ulong addr, uintptr_t ra)
+static bool is_guarded_page(CPUARMState *env, uint64_t addr, uintptr_t ra)
 {
 #ifdef CONFIG_USER_ONLY
     return page_get_flags(addr) & PAGE_BTI;
