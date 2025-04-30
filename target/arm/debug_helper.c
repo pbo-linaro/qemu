@@ -12,9 +12,11 @@
 #include "cpu-features.h"
 #include "cpregs.h"
 #include "exec/exec-all.h"
-#include "exec/helper-proto.h"
 #include "exec/watchpoint.h"
 #include "system/tcg.h"
+
+#define HELPER_H "helper.h"
+#include "exec/helper-proto.h"
 
 #ifdef CONFIG_TCG
 /* Return the Exception Level targeted by debug exceptions. */

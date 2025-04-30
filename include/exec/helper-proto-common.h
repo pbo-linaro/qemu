@@ -9,8 +9,18 @@
 
 #include "qemu/atomic128.h"  /* for HAVE_CMPXCHG128 */
 
+#ifdef HELPER_H
+# define HELPER_H_SAVE HELPER_H
+# undef HELPER_H
+#endif
+
 #define HELPER_H "accel/tcg/tcg-runtime.h"
 #include "exec/helper-proto.h.inc"
 #undef  HELPER_H
+
+#ifdef HELPER_H_SAVE
+# define HELPER_H HELPER_H_SAVE
+# undef HELPER_H_SAVE
+#endif
 
 #endif /* HELPER_PROTO_COMMON_H */
