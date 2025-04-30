@@ -42,6 +42,10 @@
 #endif
 #include "vec_internal.h"
 
+#define HELPER_H "tcg/helper-a64.h"
+#include "exec/helper-info.c.inc"
+#undef  HELPER_H
+
 /* C2.4.7 Multiply and divide */
 /* special cases for 0 and LLONG_MIN are mandated by the standard */
 uint64_t HELPER(udiv64)(uint64_t num, uint64_t den)

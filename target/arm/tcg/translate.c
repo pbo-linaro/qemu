@@ -29,7 +29,7 @@
 #include "exec/helper-proto.h"
 #include "exec/target_page.h"
 
-#define HELPER_H "helper.h"
+#define HELPER_H "tcg/helper.h"
 #include "exec/helper-info.c.inc"
 #undef  HELPER_H
 

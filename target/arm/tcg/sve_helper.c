@@ -36,6 +36,9 @@
 #include "user/page-protection.h"
 #endif
 
+#define HELPER_H "tcg/helper-sve.h"
+#include "exec/helper-info.c.inc"
+#undef  HELPER_H
 
 /* Return a value for NZCV as per the ARM PredTest pseudofunction.
  *
