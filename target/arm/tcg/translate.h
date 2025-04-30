@@ -7,7 +7,10 @@
 #include "exec/exec-all.h"
 #include "exec/translator.h"
 #include "exec/translation-block.h"
+
+#define HELPER_H "helper.h"
 #include "exec/helper-gen.h"
+
 #include "internals.h"
 #include "cpu-features.h"
 
