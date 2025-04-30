@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - master
+      - single_binary_target_arm
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
