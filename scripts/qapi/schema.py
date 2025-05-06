@@ -36,9 +36,12 @@ from .common import (
     POINTER_SUFFIX,
     c_name,
     cgen_ifcond,
+    cgen_runtime_ifcond,
     docgen_ifcond,
-    gen_endif,
     gen_if,
+    gen_endif,
+    gen_runtime_if,
+    gen_runtime_endif,
 )
 from .error import QAPIError, QAPISemError, QAPISourceError
 from .expr import check_exprs
@@ -50,8 +53,10 @@ class QAPISchemaIfCond:
     def __init__(
         self,
         ifcond: Optional[Union[str, Dict[str, object]]] = None,
+        runtime_ifcond: Optional[Union[str, Dict[str, object]]] = None,
     ) -> None:
         self.ifcond = ifcond
+        self.runtime_ifcond = runtime_ifcond
 
     def _cgen(self) -> str:
         return cgen_ifcond(self.ifcond)
@@ -65,8 +70,17 @@ class QAPISchemaIfCond:
     def docgen(self) -> str:
         return docgen_ifcond(self.ifcond)
 
+    def _cgen_runtime(self) -> str:
+        return cgen_runtime_ifcond(self.runtime_ifcond)
+
+    def gen_runtime_if(self) -> str:
+        return gen_runtime_if(self._cgen_runtime())
+
+    def gen_runtime_endif(self) -> str:
+        return gen_runtime_endif(self._cgen_runtime())
+
     def is_present(self) -> bool:
-        return bool(self.ifcond)
+        return bool(self.ifcond) or bool(self.runtime_ifcond)
 
 
 class QAPISchemaEntity:
@@ -1281,13 +1295,15 @@ class QAPISchema:
                 self._feature_dict[feat.name] = feat
 
         return [QAPISchemaFeature(f['name'], info,
-                                  QAPISchemaIfCond(f.get('if')))
+                                  QAPISchemaIfCond(f.get('if'),
+                                                   f.get('runtime_if')))
                 for f in features]
 
     def _make_enum_member(
         self,
         name: str,
         ifcond: Optional[Union[str, Dict[str, Any]]],
+        runtime_ifcond: Optional[Union[str, Dict[str, Any]]],
         features: Optional[List[Dict[str, Any]]],
         info: Optional[QAPISourceInfo],
     ) -> QAPISchemaEnumMember:
@@ -1299,6 +1315,7 @@ class QAPISchema:
         self, values: List[Dict[str, Any]], info: Optional[QAPISourceInfo]
     ) -> List[QAPISchemaEnumMember]:
         return [self._make_enum_member(v['name'], v.get('if'),
+                                       v.get('runtime_if'),
                                        v.get('features'), info)
                 for v in values]
 
@@ -1338,7 +1355,7 @@ class QAPISchema:
         name = expr['enum']
         data = expr['data']
         prefix = expr.get('prefix')
-        ifcond = QAPISchemaIfCond(expr.get('if'))
+        ifcond = QAPISchemaIfCond(expr.get('if'), expr.get('runtime_if'))
         info = expr.info
         features = self._make_features(expr.get('features'), info)
         self._def_definition(QAPISchemaEnumType(
@@ -1369,7 +1386,8 @@ class QAPISchema:
         info: QAPISourceInfo,
     ) -> List[QAPISchemaObjectTypeMember]:
         return [self._make_member(key, value['type'],
-                                  QAPISchemaIfCond(value.get('if')),
+                                  QAPISchemaIfCond(value.get('if'),
+                                                   value.get('runtime_if')),
                                   value.get('features'), info)
                 for (key, value) in data.items()]
 
@@ -1378,7 +1396,7 @@ class QAPISchema:
         base = expr.get('base')
         data = expr['data']
         info = expr.info
-        ifcond = QAPISchemaIfCond(expr.get('if'))
+        ifcond = QAPISchemaIfCond(expr.get('if'), expr.get('runtime_if'))
         features = self._make_features(expr.get('features'), info)
         self._def_definition(QAPISchemaObjectType(
             name, info, expr.doc, ifcond, features, base,
@@ -1404,7 +1422,7 @@ class QAPISchema:
         data = expr['data']
         assert isinstance(data, dict)
         info = expr.info
-        ifcond = QAPISchemaIfCond(expr.get('if'))
+        ifcond = QAPISchemaIfCond(expr.get('if'), expr.get('runtime_if'))
         features = self._make_features(expr.get('features'), info)
         if isinstance(base, dict):
             base = self._make_implicit_object_type(
@@ -1412,7 +1430,8 @@ class QAPISchema:
                 'base', self._make_members(base, info))
         variants = [
             self._make_variant(key, value['type'],
-                               QAPISchemaIfCond(value.get('if')),
+                               QAPISchemaIfCond(value.get('if'),
+                                                value.get('runtime_if')),
                                info)
             for (key, value) in data.items()]
         members: List[QAPISchemaObjectTypeMember] = []
@@ -1426,12 +1445,13 @@ class QAPISchema:
         name = expr['alternate']
         data = expr['data']
         assert isinstance(data, dict)
-        ifcond = QAPISchemaIfCond(expr.get('if'))
+        ifcond = QAPISchemaIfCond(expr.get('if'), expr.get('runtime_if'))
         info = expr.info
         features = self._make_features(expr.get('features'), info)
         variants = [
             self._make_variant(key, value['type'],
-                               QAPISchemaIfCond(value.get('if')),
+                               QAPISchemaIfCond(value.get('if'),
+                                                value.get('runtime_if')),
                                info)
             for (key, value) in data.items()]
         tag_member = QAPISchemaObjectTypeMember('type', info, 'QType', False)
@@ -1450,7 +1470,7 @@ class QAPISchema:
         allow_oob = expr.get('allow-oob', False)
         allow_preconfig = expr.get('allow-preconfig', False)
         coroutine = expr.get('coroutine', False)
-        ifcond = QAPISchemaIfCond(expr.get('if'))
+        ifcond = QAPISchemaIfCond(expr.get('if'), expr.get('runtime_if'))
         info = expr.info
         features = self._make_features(expr.get('features'), info)
         if isinstance(data, dict):
@@ -1469,7 +1489,7 @@ class QAPISchema:
         name = expr['event']
         data = expr.get('data')
         boxed = expr.get('boxed', False)
-        ifcond = QAPISchemaIfCond(expr.get('if'))
+        ifcond = QAPISchemaIfCond(expr.get('if'), expr.get('runtime_if'))
         info = expr.info
         features = self._make_features(expr.get('features'), info)
         if isinstance(data, dict):

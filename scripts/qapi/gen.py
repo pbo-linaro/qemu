@@ -109,6 +109,37 @@ def _wrap_ifcond(ifcond: QAPISchemaIfCond, before: str, after: str) -> str:
     return out
 
 
+def _wrap_runtime_ifcond(ifcond: QAPISchemaIfCond, before: str, after: str) -> str:
+    if before == after:
+        return after   # suppress empty #if ... #endif
+
+    assert after.startswith(before)
+    out = before
+    added = after[len(before):]
+    if added[0] == '\n':
+        out += '\n'
+        added = added[1:]
+    out += ifcond.gen_runtime_if()
+    out += added
+    out += ifcond.gen_runtime_endif()
+    return out
+
+
+def _wrap_runtime_ifcond(ifcond: QAPISchemaIfCond, before: str, after: str) -> str:
+    if before == after:
+        return after   # suppress empty #if ... #endif
+
+    assert after.startswith(before)
+    out = before
+    added = after[len(before):]
+    if added[0] == '\n':
+        out += '\n'
+        added = added[1:]
+    out += ifcond.gen_runtime_if()
+    out += added
+    out += ifcond.gen_runtime_endif()
+    return out
+
 def build_params(arg_type: Optional[QAPISchemaObjectType],
                  boxed: bool,
                  extra: Optional[str] = None) -> str:
@@ -137,12 +168,17 @@ class QAPIGenCCode(QAPIGen):
     def __init__(self, fname: str):
         super().__init__(fname)
         self._start_if: Optional[Tuple[QAPISchemaIfCond, str, str]] = None
+        self._start_runtime_if: Optional[Tuple[QAPISchemaIfCond, str, str]] = None
 
     def start_if(self, ifcond: QAPISchemaIfCond) -> None:
         assert self._start_if is None
         self._start_if = (ifcond, self._body, self._preamble)
 
-    def end_if(self) -> None:
+    def start_runtime_if(self, ifcond: QAPISchemaIfCond) -> None:
+        assert self._start_runtime_if is None
+        self._start_runtime_if = (ifcond, self._body, self._preamble)
+
+    def end_if(self, runtime: bool = False) -> None:
         assert self._start_if is not None
         self._body = _wrap_ifcond(self._start_if[0],
                                   self._start_if[1], self._body)
@@ -150,8 +186,18 @@ class QAPIGenCCode(QAPIGen):
                                       self._start_if[2], self._preamble)
         self._start_if = None
 
+    def end_runtime_if(self, runtime: bool = False) -> None:
+        assert self._start_runtime_if is not None
+        self._body = _wrap_runtime_ifcond(self._start_runtime_if[0],
+                                          self._start_runtime_if[1], self._body)
+        self._preamble = _wrap_runtime_ifcond(self._start_runtime_if[0],
+                                              self._start_runtime_if[2],
+                                              self._preamble)
+        self._start_runtime_if = None
+
     def get_content(self) -> str:
         assert self._start_if is None
+        assert self._start_runtime_if is None
         return super().get_content()
 
 
@@ -231,6 +277,14 @@ def ifcontext(ifcond: QAPISchemaIfCond, *args: QAPIGenCCode) -> Iterator[None]:
     for arg in args:
         arg.end_if()
 
+@contextmanager
+def runtime_ifcontext(ifcond: QAPISchemaIfCond,
+                      *args: QAPIGenCCode) -> Iterator[None]:
+    for arg in args:
+        arg.start_runtime_if(ifcond)
+    yield
+    for arg in args:
+        arg.end_runtime_if()
 
 class QAPISchemaMonolithicCVisitor(QAPISchemaVisitor):
     def __init__(self,

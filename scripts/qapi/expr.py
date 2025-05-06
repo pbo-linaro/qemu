@@ -392,7 +392,8 @@ def check_type_implicit(value: Optional[object],
                          permit_underscore=permissive)
         if c_name(key, False) == 'u' or c_name(key, False).startswith('has_'):
             raise QAPISemError(info, "%s uses reserved name" % key_source)
-        check_keys(arg, info, key_source, ['type'], ['if', 'features'])
+        check_keys(arg, info, key_source, ['type'], ['if', 'features',
+                                                     'runtime_if'])
         check_if(arg, info, key_source)
         check_features(arg.get('features'), info)
         check_type_name_or_array(arg['type'], info, key_source)
@@ -637,12 +638,13 @@ def check_exprs(exprs: List[QAPIExpression]) -> List[QAPIExpression]:
 
         if meta == 'enum':
             check_keys(expr, info, meta,
-                       ['enum', 'data'], ['if', 'features', 'prefix'])
+                       ['enum', 'data'], ['if', 'runtime_if', 'features',
+                                          'prefix'])
             check_enum(expr)
         elif meta == 'union':
             check_keys(expr, info, meta,
                        ['union', 'base', 'discriminator', 'data'],
-                       ['if', 'features'])
+                       ['if', 'runtime_if', 'features'])
             normalize_members(expr.get('base'))
             normalize_members(expr['data'])
             check_union(expr)
@@ -653,20 +655,22 @@ def check_exprs(exprs: List[QAPIExpression]) -> List[QAPIExpression]:
             check_alternate(expr)
         elif meta == 'struct':
             check_keys(expr, info, meta,
-                       ['struct', 'data'], ['base', 'if', 'features'])
+                       ['struct', 'data'], ['base', 'if', 'runtime_if',
+                                            'features'])
             normalize_members(expr['data'])
             check_struct(expr)
         elif meta == 'command':
             check_keys(expr, info, meta,
                        ['command'],
-                       ['data', 'returns', 'boxed', 'if', 'features',
-                        'gen', 'success-response', 'allow-oob',
+                       ['data', 'returns', 'boxed', 'if', 'runtime_if',
+                        'features', 'gen', 'success-response', 'allow-oob',
                         'allow-preconfig', 'coroutine'])
             normalize_members(expr.get('data'))
             check_command(expr)
         elif meta == 'event':
             check_keys(expr, info, meta,
-                       ['event'], ['data', 'boxed', 'if', 'features'])
+                       ['event'], ['data', 'boxed', 'if', 'runtime_if',
+                                   'features'])
             normalize_members(expr.get('data'))
             check_event(expr)
         else:

@@ -229,6 +229,8 @@ def gen_ifcond(ifcond: Optional[Union[str, Dict[str, Any]]],
 def cgen_ifcond(ifcond: Optional[Union[str, Dict[str, Any]]]) -> str:
     return gen_ifcond(ifcond, 'defined(%s)', '!%s', ' && ', ' || ')
 
+def cgen_runtime_ifcond(ifcond: Optional[Union[str, Dict[str, Any]]]) -> str:
+    return gen_ifcond(ifcond, '%s', '!%s', ' && ', ' || ')
 
 def docgen_ifcond(ifcond: Optional[Union[str, Dict[str, Any]]]) -> str:
     # TODO Doc generated for conditions needs polish
@@ -242,7 +244,6 @@ def gen_if(cond: str) -> str:
 #if %(cond)s
 ''', cond=cond)
 
-
 def gen_endif(cond: str) -> str:
     if not cond:
         return ''
@@ -250,6 +251,19 @@ def gen_endif(cond: str) -> str:
 #endif /* %(cond)s */
 ''', cond=cond)
 
+def gen_runtime_if(cond: str) -> str:
+    if not cond:
+        return ''
+    return mcgen('''
+if (%(cond)s) {
+''', cond=cond)
+
+def gen_runtime_endif(cond: str) -> str:
+    if not cond:
+        return ''
+    return mcgen('''
+} /* (%(cond)s) */
+''', cond=cond)
 
 def must_match(pattern: str, string: str) -> Match[str]:
     match = re.match(pattern, string)
