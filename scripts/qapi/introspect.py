@@ -193,15 +193,18 @@ class QAPISchemaGenIntrospectVisitor(QAPISchemaMonolithicCVisitor):
         for typ in self._used_types:
             typ.visit(self)
         # generate C
-        name = c_name(self._prefix, protect=False) + 'qmp_schema_qlit'
+        name = c_name(self._prefix, protect=False) + 'qmp_schema_qobject'
         self._genh.add(mcgen('''
 #include "qobject/qlit.h"
 
-extern const QLitObject %(c_name)s;
+QObject *%(c_name)s(void);
 ''',
                              c_name=c_name(name)))
         self._genc.add(mcgen('''
-const QLitObject %(c_name)s = %(c_string)s;
+QObject *%(c_name)s(void) {
+    const QLitObject res = %(c_string)s;
+    return qobject_from_qlit(&res);
+}
 ''',
                              c_name=c_name(name),
                              c_string=_tree_to_qlit(self._trees)))

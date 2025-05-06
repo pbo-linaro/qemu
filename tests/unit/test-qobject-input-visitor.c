@@ -1184,10 +1184,10 @@ static void test_visitor_in_fail_alternate(TestInputVisitorData *data,
 }
 
 static void do_test_visitor_in_qmp_introspect(TestInputVisitorData *data,
-                                              const QLitObject *qlit)
+                                              QObject *qlit)
 {
     g_autoptr(SchemaInfoList) schema = NULL;
-    QObject *obj = qobject_from_qlit(qlit);
+    QObject *obj = qlit;
     Visitor *v;
 
     v = qobject_input_visitor_new(obj);
@@ -1202,7 +1202,7 @@ static void do_test_visitor_in_qmp_introspect(TestInputVisitorData *data,
 static void test_visitor_in_qmp_introspect(TestInputVisitorData *data,
                                            const void *unused)
 {
-    do_test_visitor_in_qmp_introspect(data, &test_qmp_schema_qlit);
+    do_test_visitor_in_qmp_introspect(data, test_qmp_schema_qobject());
 }
 
 int main(int argc, char **argv)

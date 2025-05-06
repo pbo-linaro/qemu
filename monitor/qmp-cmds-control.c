@@ -203,7 +203,7 @@ static SchemaInfoList *zap_deprecated(SchemaInfoList *schema)
 
 SchemaInfoList *qmp_query_qmp_schema(Error **errp)
 {
-    QObject *obj = qobject_from_qlit(&qmp_schema_qlit);
+    QObject *obj = qmp_schema_qobject();
     Visitor *v = qobject_input_visitor_new(obj);
     SchemaInfoList *schema = NULL;
 
