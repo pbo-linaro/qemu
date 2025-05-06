@@ -90,6 +90,8 @@ bool qlit_equal_qobject(const QLitObject *lhs, const QObject *rhs)
 
 QObject *qobject_from_qlit(const QLitObject *qlit)
 {
+    g_assert(!qlit->hidden);
+
     switch (qlit->type) {
     case QTYPE_QNULL:
         return QOBJECT(qnull());
@@ -102,7 +104,9 @@ QObject *qobject_from_qlit(const QLitObject *qlit)
         QLitDictEntry *e;
 
         for (e = qlit->value.qdict; e->key; e++) {
-            qdict_put_obj(qdict, e->key, qobject_from_qlit(&e->value));
+            if (!e->hidden) {
+                qdict_put_obj(qdict, e->key, qobject_from_qlit(&e->value));
+            }
         }
         return QOBJECT(qdict);
     }
@@ -111,7 +115,9 @@ QObject *qobject_from_qlit(const QLitObject *qlit)
         QLitObject *e;
 
         for (e = qlit->value.qlist; e->type != QTYPE_NONE; e++) {
-            qlist_append_obj(qlist, qobject_from_qlit(e));
+            if (!e->hidden) {
+                qlist_append_obj(qlist, qobject_from_qlit(e));
+            }
         }
         return QOBJECT(qlist);
     }
