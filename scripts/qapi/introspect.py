@@ -94,7 +94,8 @@ class Annotated(Generic[_ValueT]):
 
 def _tree_to_qlit(obj: JSONValue,
                   level: int = 0,
-                  dict_value: bool = False) -> str:
+                  dict_value: bool = False,
+                  hidden_cond: str = '') -> str:
     """
     Convert the type tree into a QLIT C string, recursively.
 
@@ -120,7 +121,11 @@ def _tree_to_qlit(obj: JSONValue,
             ret += indent(level) + f"/* {obj.comment} */\n"
         if obj.ifcond.is_present():
             ret += obj.ifcond.gen_if()
-        ret += _tree_to_qlit(obj.value, level)
+        hidden_cond = obj.ifcond.get_runtime_cond()
+        # reverse runtime_if
+        if hidden_cond:
+            hidden_cond = '!(' + hidden_cond + ')'
+        ret += _tree_to_qlit(obj.value, level, hidden_cond=hidden_cond)
         if obj.ifcond.is_present():
             ret += '\n' + obj.ifcond.gen_endif()
         return ret
@@ -129,30 +134,35 @@ def _tree_to_qlit(obj: JSONValue,
     if not dict_value:
         ret += indent(level)
 
+    macro_suffix = ''
+    if hidden_cond:
+        macro_suffix = '_HIDDEN'
+        hidden_cond = ', (' + hidden_cond + ')'
+
     # Scalars:
     if obj is None:
         ret += 'QLIT_QNULL'
     elif isinstance(obj, str):
-        ret += f"QLIT_QSTR({to_c_string(obj)})"
+        ret += f"QLIT_QSTR{macro_suffix}({to_c_string(obj)}{hidden_cond})"
     elif isinstance(obj, bool):
-        ret += f"QLIT_QBOOL({str(obj).lower()})"
+        ret += f"QLIT_QBOOL{macro_suffix}({str(obj).lower()}{hidden_cond})"
 
     # Non-scalars:
     elif isinstance(obj, list):
-        ret += 'QLIT_QLIST(((QLitObject[]) {\n'
+        ret += 'QLIT_QLIST' + macro_suffix + '(((QLitObject[]) {\n'
         for value in obj:
             ret += _tree_to_qlit(value, level + 1).strip('\n') + '\n'
         ret += indent(level + 1) + '{}\n'
-        ret += indent(level) + '}))'
+        ret += indent(level) + '})' + hidden_cond + ')'
     elif isinstance(obj, dict):
-        ret += 'QLIT_QDICT(((QLitDictEntry[]) {\n'
+        ret += 'QLIT_QDICT' + macro_suffix + '(((QLitDictEntry[]) {\n'
         for key, value in sorted(obj.items()):
             ret += indent(level + 1) + "{{ {:s}, {:s} }},\n".format(
                 to_c_string(key),
-                _tree_to_qlit(value, level + 1, dict_value=True)
+                _tree_to_qlit(value, level + 1, dict_value=True),
             )
         ret += indent(level + 1) + '{}\n'
-        ret += indent(level) + '}))'
+        ret += indent(level) + '})' + hidden_cond + ')'
     else:
         raise NotImplementedError(
             f"type '{type(obj).__name__}' not implemented"

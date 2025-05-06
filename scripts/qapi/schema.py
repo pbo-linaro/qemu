@@ -79,6 +79,9 @@ class QAPISchemaIfCond:
     def gen_runtime_endif(self) -> str:
         return gen_runtime_endif(self._cgen_runtime())
 
+    def get_runtime_cond(self) -> str:
+        return self._cgen_runtime()
+
     def is_present(self) -> bool:
         return bool(self.ifcond) or bool(self.runtime_ifcond)
 
