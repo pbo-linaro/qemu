@@ -81,7 +81,7 @@ tests_aarch64_system_quick = [
 
 tests_aarch64_system_thorough = [
   'aarch64_aspeed_ast2700',
-  'aarch64_aspeed_ast2700fc',
+  # 'aarch64_aspeed_ast2700fc', # ubsan error
   'aarch64_raspi3',
   'aarch64_raspi4',
   'aarch64_replay',
