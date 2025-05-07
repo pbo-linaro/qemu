@@ -27,6 +27,7 @@ from .gen import (
     build_params,
     gen_features,
     ifcontext,
+    runtime_ifcontext,
 )
 from .schema import (
     QAPISchema,
@@ -406,9 +407,10 @@ void %(c_prefix)sqmp_init_marshal(QmpCommandList *cmds)
                 self._gen_trace_events.add(gen_trace(name))
         with self._temp_module('./init'):
             with ifcontext(ifcond, self._genh, self._genc):
-                self._genc.add(gen_register_command(
-                    name, features, success_response, allow_oob,
-                    allow_preconfig, coroutine))
+                with runtime_ifcontext(ifcond, self._genh, self._genc):
+                    self._genc.add(gen_register_command(
+                        name, features, success_response, allow_oob,
+                        allow_preconfig, coroutine))
 
 
 def gen_commands(schema: QAPISchema,
