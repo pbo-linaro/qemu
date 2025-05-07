@@ -190,6 +190,7 @@ class QAPISchemaGenIntrospectVisitor(QAPISchemaMonolithicCVisitor):
         self._name_map: Dict[str, str] = {}
         self._genc.add(mcgen('''
 #include "qemu/osdep.h"
+#include "qemu/target-info.h"
 #include "%(prefix)sqapi-introspect.h"
 
 ''',

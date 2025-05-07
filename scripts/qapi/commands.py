@@ -319,6 +319,7 @@ class QAPISchemaGenCommandVisitor(QAPISchemaModularCVisitor):
         visit = self._module_basename('qapi-visit', name)
         self._genc.add(mcgen('''
 #include "qemu/osdep.h"
+#include "qemu/target-info.h"
 #include "qapi/compat-policy.h"
 #include "qapi/visitor.h"
 #include "qobject/qdict.h"
@@ -354,6 +355,7 @@ void %(c_prefix)sqmp_init_marshal(QmpCommandList *cmds);
                              c_prefix=c_name(self._prefix, protect=False)))
         self._genc.add(mcgen('''
 #include "qemu/osdep.h"
+#include "qemu/target-info.h"
 #include "%(prefix)sqapi-commands.h"
 #include "%(prefix)sqapi-init-commands.h"
 #include "%(prefix)sqapi-features.h"
