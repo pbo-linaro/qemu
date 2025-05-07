@@ -90,6 +90,7 @@ bool visit_type_%(c_name)s_members(Visitor *v, %(c_name)s *obj, Error **errp)
 
     for memb in members:
         ret += memb.ifcond.gen_if()
+        ret += memb.ifcond.gen_runtime_if()
         if memb.optional:
             has = 'has_' + c_name(memb.name)
             if memb.need_has():
@@ -126,6 +127,7 @@ bool visit_type_%(c_name)s_members(Visitor *v, %(c_name)s *obj, Error **errp)
             ret += mcgen('''
     }
 ''')
+        ret += memb.ifcond.gen_runtime_endif()
         ret += memb.ifcond.gen_endif()
 
     if branches:
