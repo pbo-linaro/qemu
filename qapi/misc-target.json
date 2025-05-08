@@ -17,7 +17,7 @@
 #     <- { "return": {} }
 ##
 { 'command': 'rtc-reset-reinjection',
-  'if': 'TARGET_I386' }
+  'runtime_if': { 'any': [ 'target_i386()', 'target_x86_64()' ] } }
 
 ##
 # @SevState:
@@ -45,7 +45,7 @@
 { 'enum': 'SevState',
   'data': ['uninit', 'launch-update', 'launch-secret', 'running',
            'send-update', 'receive-update' ],
-  'if': 'TARGET_I386' }
+  'runtime_if': { 'any': [ 'target_i386()', 'target_x86_64()' ] } }
 
 ##
 # @SevGuestType:
@@ -60,7 +60,7 @@
 ##
 { 'enum': 'SevGuestType',
   'data': [ 'sev', 'sev-snp' ],
-  'if': 'TARGET_I386' }
+  'runtime_if': { 'any': [ 'target_i386()', 'target_x86_64()' ] } }
 
 ##
 # @SevGuestInfo:
@@ -76,7 +76,7 @@
 { 'struct': 'SevGuestInfo',
   'data': { 'policy': 'uint32',
             'handle': 'uint32' },
-  'if': 'TARGET_I386' }
+  'runtime_if': { 'any': [ 'target_i386()', 'target_x86_64()' ] } }
 
 ##
 # @SevSnpGuestInfo:
@@ -89,7 +89,7 @@
 ##
 { 'struct': 'SevSnpGuestInfo',
   'data': { 'snp-policy': 'uint64' },
-  'if': 'TARGET_I386' }
+  'runtime_if': { 'any': [ 'target_i386()', 'target_x86_64()' ] } }
 
 ##
 # @SevInfo:
@@ -121,7 +121,7 @@
   'data': {
       'sev': 'SevGuestInfo',
       'sev-snp': 'SevSnpGuestInfo' },
-  'if': 'TARGET_I386' }
+  'runtime_if': { 'any': [ 'target_i386()', 'target_x86_64()' ] } }
 
 
 ##
@@ -141,7 +141,7 @@
 #                      "handle" : 1 } }
 ##
 { 'command': 'query-sev', 'returns': 'SevInfo',
-  'if': 'TARGET_I386' }
+  'runtime_if': { 'any': [ 'target_i386()', 'target_x86_64()' ] } }
 
 ##
 # @SevLaunchMeasureInfo:
@@ -153,7 +153,7 @@
 # Since: 2.12
 ##
 { 'struct': 'SevLaunchMeasureInfo', 'data': {'data': 'str'},
-  'if': 'TARGET_I386' }
+  'runtime_if': { 'any': [ 'target_i386()', 'target_x86_64()' ] } }
 
 ##
 # @query-sev-launch-measure:
@@ -170,7 +170,7 @@
 #     <- { "return": { "data": "4l8LXeNlSPUDlXPJG5966/8%YZ" } }
 ##
 { 'command': 'query-sev-launch-measure', 'returns': 'SevLaunchMeasureInfo',
-  'if': 'TARGET_I386' }
+  'runtime_if': { 'any': [ 'target_i386()', 'target_x86_64()' ] } }
 
 ##
 # @SevCapability:
@@ -197,7 +197,7 @@
             'cpu0-id': 'str',
             'cbitpos': 'int',
             'reduced-phys-bits': 'int'},
-  'if': 'TARGET_I386' }
+  'runtime_if': { 'any': [ 'target_i386()', 'target_x86_64()' ] } }
 
 ##
 # @query-sev-capabilities:
@@ -217,7 +217,7 @@
 #                      "cbitpos": 47, "reduced-phys-bits": 1}}
 ##
 { 'command': 'query-sev-capabilities', 'returns': 'SevCapability',
-  'if': 'TARGET_I386' }
+  'runtime_if': { 'any': [ 'target_i386()', 'target_x86_64()' ] } }
 
 ##
 # @sev-inject-launch-secret:
@@ -234,7 +234,7 @@
 ##
 { 'command': 'sev-inject-launch-secret',
   'data': { 'packet-header': 'str', 'secret': 'str', '*gpa': 'uint64' },
-  'if': 'TARGET_I386' }
+  'runtime_if': { 'any': [ 'target_i386()', 'target_x86_64()' ] } }
 
 ##
 # @SevAttestationReport:
@@ -248,7 +248,7 @@
 ##
 { 'struct': 'SevAttestationReport',
   'data': { 'data': 'str'},
-  'if': 'TARGET_I386' }
+  'runtime_if': { 'any': [ 'target_i386()', 'target_x86_64()' ] } }
 
 ##
 # @query-sev-attestation-report:
@@ -272,7 +272,7 @@
 { 'command': 'query-sev-attestation-report',
   'data': { 'mnonce': 'str' },
   'returns': 'SevAttestationReport',
-  'if': 'TARGET_I386' }
+  'runtime_if': { 'any': [ 'target_i386()', 'target_x86_64()' ] } }
 
 ##
 # @GICCapability:
@@ -297,7 +297,7 @@
   'data': { 'version': 'int',
             'emulated': 'bool',
             'kernel': 'bool' },
-  'if': 'TARGET_ARM' }
+  'runtime_if': { 'any': [ 'target_arm()', 'target_aarch64()' ] } }
 
 ##
 # @query-gic-capabilities:
@@ -316,7 +316,7 @@
 #                     { "version": 3, "emulated": false, "kernel": true } ] }
 ##
 { 'command': 'query-gic-capabilities', 'returns': ['GICCapability'],
-  'if': 'TARGET_ARM' }
+  'runtime_if': { 'any': [ 'target_arm()', 'target_aarch64()' ] } }
 
 ##
 # @SGXEPCSection:
@@ -356,7 +356,7 @@
             'sgx2': 'bool',
             'flc': 'bool',
             'sections': ['SGXEPCSection']},
-   'if': 'TARGET_I386' }
+   'runtime_if': { 'any': [ 'target_i386()', 'target_x86_64()' ] } }
 
 ##
 # @query-sgx:
@@ -375,7 +375,8 @@
 #                      "sections": [{"node": 0, "size": 67108864},
 #                      {"node": 1, "size": 29360128}]} }
 ##
-{ 'command': 'query-sgx', 'returns': 'SGXInfo', 'if': 'TARGET_I386' }
+{ 'command': 'query-sgx', 'returns': 'SGXInfo',
+  'runtime_if': { 'any': [ 'target_i386()', 'target_x86_64()' ] } }
 
 ##
 # @query-sgx-capabilities:
@@ -394,7 +395,8 @@
 #                      "section" : [{"node": 0, "size": 67108864},
 #                      {"node": 1, "size": 29360128}]} }
 ##
-{ 'command': 'query-sgx-capabilities', 'returns': 'SGXInfo', 'if': 'TARGET_I386' }
+{ 'command': 'query-sgx-capabilities', 'returns': 'SGXInfo',
+  'runtime_if': { 'any': [ 'target_i386()', 'target_x86_64()' ] } }
 
 
 ##
@@ -418,7 +420,7 @@
 ##
 { 'enum': 'EvtchnPortType',
   'data': ['closed', 'unbound', 'interdomain', 'pirq', 'virq', 'ipi'],
-  'if': 'TARGET_I386' }
+  'runtime_if': { 'any': [ 'target_i386()', 'target_x86_64()' ] } }
 
 ##
 # @EvtchnInfo:
@@ -449,7 +451,7 @@
            'target': 'uint16',
            'pending': 'bool',
            'masked': 'bool'},
-  'if': 'TARGET_I386' }
+  'runtime_if': { 'any': [ 'target_i386()', 'target_x86_64()' ] } }
 
 
 ##
@@ -488,7 +490,7 @@
 ##
 { 'command': 'xen-event-list',
   'returns': ['EvtchnInfo'],
-  'if': 'TARGET_I386' }
+  'runtime_if': { 'any': [ 'target_i386()', 'target_x86_64()' ] } }
 
 ##
 # @xen-event-inject:
@@ -506,4 +508,4 @@
 ##
 { 'command': 'xen-event-inject',
   'data': { 'port': 'uint32' },
-  'if': 'TARGET_I386' }
+  'runtime_if': { 'any': [ 'target_i386()', 'target_x86_64()' ] } }

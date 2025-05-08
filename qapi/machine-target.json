@@ -96,7 +96,7 @@
 ##
 { 'struct': 'CpuModelBaselineInfo',
   'data': { 'model': 'CpuModelInfo' },
-  'if': 'TARGET_S390X' }
+  'runtime_if': 'target_s390x()' }
 
 ##
 # @CpuModelCompareInfo:
@@ -120,7 +120,7 @@
 { 'struct': 'CpuModelCompareInfo',
   'data': { 'result': 'CpuModelCompareResult',
             'responsible-properties': ['str'] },
-  'if': 'TARGET_S390X' }
+  'runtime_if': 'target_s390x()' }
 
 ##
 # @query-cpu-model-comparison:
@@ -179,7 +179,7 @@
 { 'command': 'query-cpu-model-comparison',
   'data': { 'modela': 'CpuModelInfo', 'modelb': 'CpuModelInfo' },
   'returns': 'CpuModelCompareInfo',
-  'if': 'TARGET_S390X' }
+  'runtime_if': 'target_s390x()' }
 
 ##
 # @query-cpu-model-baseline:
@@ -235,7 +235,7 @@
   'data': { 'modela': 'CpuModelInfo',
             'modelb': 'CpuModelInfo' },
   'returns': 'CpuModelBaselineInfo',
-  'if': 'TARGET_S390X' }
+  'runtime_if': 'target_s390x()' }
 
 ##
 # @CpuModelExpansionInfo:
@@ -256,12 +256,15 @@
 { 'struct': 'CpuModelExpansionInfo',
   'data': { 'model': 'CpuModelInfo',
             'deprecated-props' : { 'type': ['str'],
-                                   'if': 'TARGET_S390X' } },
-  'if': { 'any': [ 'TARGET_S390X',
-                   'TARGET_I386',
-                   'TARGET_ARM',
-                   'TARGET_LOONGARCH64',
-                   'TARGET_RISCV' ] } }
+                                   'runtime_if': 'target_s390x()'} },
+  'runtime_if': { 'any': [ 'target_s390x()',
+                           'target_i386()',
+                           'target_x86_64()',
+                           'target_arm()',
+                           'target_aarch64()',
+                           'target_loongarch64()',
+                           'target_riscv32()',
+                           'target_riscv64()' ] } }
 
 ##
 # @query-cpu-model-expansion:
@@ -311,11 +314,14 @@
   'data': { 'type': 'CpuModelExpansionType',
             'model': 'CpuModelInfo' },
   'returns': 'CpuModelExpansionInfo',
-  'if': { 'any': [ 'TARGET_S390X',
-                   'TARGET_I386',
-                   'TARGET_ARM',
-                   'TARGET_LOONGARCH64',
-                   'TARGET_RISCV' ] } }
+  'runtime_if': { 'any': [ 'target_s390x()',
+                           'target_i386()',
+                           'target_x86_64()',
+                           'target_arm()',
+                           'target_aarch64()',
+                           'target_loongarch64()',
+                           'target_riscv32()',
+                           'target_riscv64()' ] } }
 
 ##
 # @CpuDefinitionInfo:
@@ -378,13 +384,18 @@
             'typename': 'str',
             '*alias-of' : 'str',
             'deprecated' : 'bool' },
-  'if': { 'any': [ 'TARGET_PPC',
-                   'TARGET_ARM',
-                   'TARGET_I386',
-                   'TARGET_S390X',
-                   'TARGET_MIPS',
-                   'TARGET_LOONGARCH64',
-                   'TARGET_RISCV' ] } }
+  'runtime_if': { 'any': [ 'target_ppc()',
+                           'target_ppc64()',
+                           'target_arm()',
+                           'target_aarch64()',
+                           'target_i386()',
+                           'target_x86_64()',
+                           'target_s390x()',
+                           'target_mips()',
+                           'target_mips64()',
+                           'target_loongarch64()',
+                           'target_riscv32()',
+                           'target_riscv64()' ] } }
 
 ##
 # @query-cpu-definitions:
@@ -396,13 +407,18 @@
 # Since: 1.2
 ##
 { 'command': 'query-cpu-definitions', 'returns': ['CpuDefinitionInfo'],
-  'if': { 'any': [ 'TARGET_PPC',
-                   'TARGET_ARM',
-                   'TARGET_I386',
-                   'TARGET_S390X',
-                   'TARGET_MIPS',
-                   'TARGET_LOONGARCH64',
-                   'TARGET_RISCV' ] } }
+  'runtime_if': { 'any': [ 'target_ppc()',
+                           'target_ppc64()',
+                           'target_arm()',
+                           'target_aarch64()',
+                           'target_i386()',
+                           'target_x86_64()',
+                           'target_s390x()',
+                           'target_mips()',
+                           'target_mips64()',
+                           'target_loongarch64()',
+                           'target_riscv32()',
+                           'target_riscv64()' ] } }
 
 ##
 # @S390CpuPolarization:
@@ -414,7 +430,7 @@
 ##
 { 'enum': 'S390CpuPolarization',
   'data': [ 'horizontal', 'vertical' ],
-  'if': 'TARGET_S390X'
+  'runtime_if': 'target_s390x()'
 }
 
 ##
@@ -453,7 +469,7 @@
       '*dedicated': 'bool'
   },
   'features': [ 'unstable' ],
-  'if': { 'all': [ 'TARGET_S390X' , 'CONFIG_KVM' ] }
+  'runtime_if': { 'all': [ 'target_s390x()' , 'target_has_kvm()' ] }
 }
 
 ##
@@ -489,7 +505,7 @@
 { 'event': 'CPU_POLARIZATION_CHANGE',
   'data': { 'polarization': 'S390CpuPolarization' },
   'features': [ 'unstable' ],
-  'if': { 'all': [ 'TARGET_S390X', 'CONFIG_KVM' ] }
+  'runtime_if': { 'all': [ 'target_s390x()' , 'target_has_kvm()' ] }
 }
 
 ##
@@ -503,7 +519,7 @@
 ##
 { 'struct': 'CpuPolarizationInfo',
   'data': { 'polarization': 'S390CpuPolarization' },
-  'if': { 'all': [ 'TARGET_S390X', 'CONFIG_KVM' ] }
+  'runtime_if': { 'all': [ 'target_s390x()' , 'target_has_kvm()' ] }
 }
 
 ##
@@ -519,5 +535,5 @@
 ##
 { 'command': 'query-s390x-cpu-polarization', 'returns': 'CpuPolarizationInfo',
   'features': [ 'unstable' ],
-  'if': { 'all': [ 'TARGET_S390X', 'CONFIG_KVM' ] }
+  'runtime_if': { 'all': [ 'target_s390x()' , 'target_has_kvm()' ] }
 }
