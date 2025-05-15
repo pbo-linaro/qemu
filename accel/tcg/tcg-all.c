@@ -222,6 +222,22 @@ static void tcg_set_one_insn_per_tb(Object *obj, bool value, Error **errp)
     qatomic_set(&one_insn_per_tb, value);
 }
 
+#ifndef CONFIG_USER_ONLY
+static void tcg_set_slow_path_memory(Object *obj, bool value, Error **errp)
+{
+    qatomic_set(&tlb_force_mmu_slow_path, value);
+}
+
+static void tcg_set_check_address_translation(Object *obj, bool value,
+                                              Error **errp)
+{
+    qatomic_set(&tlb_check_address_translation, value);
+    if (value) {
+        tcg_set_slow_path_memory(obj, true, errp);
+    }
+}
+#endif /* CONFIG_USER_ONLY */
+
 static int tcg_gdbstub_supported_sstep_flags(AccelState *as)
 {
     /*
