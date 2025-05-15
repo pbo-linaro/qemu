@@ -27,6 +27,7 @@
 #include "system/tcg.h"
 #include "exec/replay-core.h"
 #include "exec/icount.h"
+#include "exec/cputlb.h"
 #include "tcg/startup.h"
 #include "qapi/error.h"
 #include "qemu/error-report.h"
@@ -288,6 +289,22 @@ static void tcg_accel_class_init(ObjectClass *oc, const void *data)
                                    tcg_set_one_insn_per_tb);
     object_class_property_set_description(oc, "one-insn-per-tb",
         "Only put one guest insn in each translation block");
+
+#ifndef CONFIG_USER_ONLY
+    object_class_property_add_bool(oc, "slow-path-memory",
+                                   NULL,
+                                   tcg_set_slow_path_memory);
+    object_class_property_set_description(oc, "slow-path-memory",
+        "Force slow path for every memory access");
+
+    object_class_property_add_bool(oc, "check-address-translation",
+                                   NULL,
+                                   tcg_set_check_address_translation);
+    object_class_property_set_description(oc,
+                                          "check-address-translation",
+        "Check address translated is always correct "
+                     "(implies slow-path-memory)");
+#endif /* CONFIG_USER_ONLY */
 }
 
 static const TypeInfo tcg_accel_type = {
