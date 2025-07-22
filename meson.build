@@ -4437,14 +4437,14 @@ foreach target : target_dirs
     execs = [{
       'name': 'qemu-system-' + target_name,
       'win_subsystem': 'console',
-      'sources': files('system/main.c'),
+      'sources': [],
       'dependencies': [sdl]
     }]
     if host_os == 'windows' and (sdl.found() or gtk.found())
       execs += [{
         'name': 'qemu-system-' + target_name + 'w',
         'win_subsystem': 'windows',
-        'sources': files('system/main.c'),
+        'sources': [],
         'dependencies': [sdl]
       }]
     endif
@@ -4519,7 +4519,6 @@ foreach lib: single_binary_libs
   single_binary_objects += lib.extract_all_objects(recursive: true)
 endforeach
 executable('qemu-system',
-            sources: files('system/main.c'),
             objects: single_binary_objects,
             dependencies: single_binary_deps,
             link_depends: [block_syms, qemu_syms],
