@@ -7,9 +7,7 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-#ifndef TARGET_ARM_COMMON_SEMI_TARGET_H
-#define TARGET_ARM_COMMON_SEMI_TARGET_H
-
+#include "semihosting/common-semi.h"
 #include "target/arm/cpu-qom.h"
 
 static inline uint64_t common_semi_arg(CPUState *cs, int argno)
@@ -56,5 +54,3 @@ static inline bool common_semi_has_synccache(CPUArchState *env)
     /* Ok for A64, invalid for A32/T32 */
     return is_a64(env);
 }
-
-#endif
