@@ -3,6 +3,7 @@ user_ss.add(when: 'CONFIG_SEMIHOSTING', if_true: files(
   'user.c',
   'guestfd.c'))
 system_ss.add(when: 'CONFIG_SEMIHOSTING', if_true: files(
+  'arm-compat-semi.c',
   'config.c',
   'console.c',
   'guestfd.c',
@@ -16,5 +17,5 @@ system_ss.add(when: 'CONFIG_ARM_COMPATIBLE_SEMIHOSTING',
 
 specific_ss.add(when: ['CONFIG_SEMIHOSTING', 'CONFIG_USER_ONLY'],
                 if_true: files('syscalls.c'))
-specific_ss.add(when: ['CONFIG_ARM_COMPATIBLE_SEMIHOSTING'],
+specific_ss.add(when: ['CONFIG_ARM_COMPATIBLE_SEMIHOSTING', 'CONFIG_USER_ONLY'],
 		if_true: files('arm-compat-semi.c'))
