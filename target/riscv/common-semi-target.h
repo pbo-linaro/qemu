@@ -27,7 +27,9 @@ static inline void common_semi_set_ret(CPUState *cs, target_ulong ret)
 
 static inline bool common_semi_sys_exit_extended(CPUState *cs, int nr)
 {
-    return (nr == TARGET_SYS_EXIT_EXTENDED || sizeof(target_ulong) == 8);
+    RISCVCPU *cpu = RISCV_CPU(cs);
+    CPURISCVState *env = &cpu->env;
+    return (nr == TARGET_SYS_EXIT_EXTENDED || is_64bit_semihosting(env));
 }
 
 static inline bool is_64bit_semihosting(CPUArchState *env)
