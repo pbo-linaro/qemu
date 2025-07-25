@@ -8,8 +8,8 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
-#ifndef TARGET_RISCV_COMMON_SEMI_TARGET_H
-#define TARGET_RISCV_COMMON_SEMI_TARGET_H
+#include "qemu/osdep.h"
+#include "cpu.h"
 
 static inline uint64_t common_semi_arg(CPUState *cs, int argno)
 {
@@ -41,5 +41,3 @@ static inline bool common_semi_has_synccache(CPUArchState *env)
 {
     return true;
 }
-
-#endif
