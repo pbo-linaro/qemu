@@ -51,6 +51,7 @@
 typedef enum SMMUSecurityIndex {
     SMMU_SEC_IDX_NS = 0,
     SMMU_SEC_IDX_S = 1,
+    SMMU_SEC_IDX_R = 2,
     SMMU_SEC_IDX_NUM,
 } SMMUSecurityIndex;
 

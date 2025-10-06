@@ -184,6 +184,8 @@ REG32(EVENTQ_IRQ_CFG2,     0xbc)
 /* Secure registers. The offsets are begin with SMMU_SECURE_BASE_OFFSET */
 #define SMMU_SECURE_BASE_OFFSET  0x8000
 
+#define SMMU_REALM_BASE_OFFSET  0x40000
+
 REG32(S_IDR0,               0x8000)
 REG32(S_IDR1,               0x8004)
     FIELD(S_IDR1, S_SIDSIZE,          0 , 6)

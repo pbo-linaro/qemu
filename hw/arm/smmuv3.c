@@ -2091,7 +2091,9 @@ static MemTxResult smmu_write_mmio(void *opaque, hwaddr offset, uint64_t data,
     /* CONSTRAINED UNPREDICTABLE choice to have page0/1 be exact aliases */
     offset &= ~0x10000;
     SMMUSecurityIndex reg_sec_idx = SMMU_SEC_IDX_NS;
-    if (offset >= SMMU_SECURE_BASE_OFFSET) {
+    if (offset >= SMMU_REALM_BASE_OFFSET) {
+        reg_sec_idx = SMMU_SEC_IDX_R;
+    } else if (offset >= SMMU_SECURE_BASE_OFFSET) {
         if (!smmu_check_secure_access(s, attrs, offset, false)) {
             trace_smmuv3_write_mmio(offset, data, size, MEMTX_OK);
             return MEMTX_OK;
@@ -2312,7 +2314,9 @@ static MemTxResult smmu_read_mmio(void *opaque, hwaddr offset, uint64_t *data,
     /* CONSTRAINED UNPREDICTABLE choice to have page0/1 be exact aliases */
     offset &= ~0x10000;
     SMMUSecurityIndex reg_sec_idx = SMMU_SEC_IDX_NS;
-    if (offset >= SMMU_SECURE_BASE_OFFSET) {
+    if (offset >= SMMU_REALM_BASE_OFFSET) {
+        reg_sec_idx = SMMU_SEC_IDX_R;
+    } else if (offset >= SMMU_SECURE_BASE_OFFSET) {
         if (!smmu_check_secure_access(s, attrs, offset, true)) {
             *data = 0;
             trace_smmuv3_read_mmio(offset, *data, size, MEMTX_OK);
@@ -2394,8 +2398,9 @@ static void smmu_realize(DeviceState *d, Error **errp)
 
     qemu_mutex_init(&s->mutex);
 
+    /* #define SMMU_R_PAGE_0_OFFSET    0x40000 */
     memory_region_init_io(&sys->iomem, OBJECT(s),
-                          &smmu_mem_ops, sys, TYPE_ARM_SMMUV3, 0x20000);
+                          &smmu_mem_ops, sys, TYPE_ARM_SMMUV3, 0x60000);
 
     sys->mrtypename = TYPE_SMMUV3_IOMMU_MEMORY_REGION;
 
