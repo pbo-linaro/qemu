@@ -341,6 +341,10 @@ static void smmuv3_init_regs(SMMUv3State *s)
     sbk->gbpa = SMMU_GBPA_RESET_VAL;
     sbk->cmdq.entry_size = sizeof(struct Cmd);
     sbk->eventq.entry_size = sizeof(struct Evt);
+
+    /* Initialize Root bank */
+    s->root.idr0 = FIELD_DP32(s->root.idr0, ROOT_IDR0, ROOT_IMPL, 1);
+    s->root.idr0 = FIELD_DP32(s->root.idr0, ROOT_IDR0, REALM_IMPL, 1);
 }
 
 static int smmu_get_ste(SMMUv3State *s, dma_addr_t addr, STE *buf,
@@ -2128,6 +2132,66 @@ static MemTxResult smmu_writel(SMMUv3State *s, hwaddr offset,
     }
 }
 
+static MemTxResult smmu_root_writel(SMMUv3State *s, hwaddr offset,
+                                    uint64_t data, MemTxAttrs attrs)
+{
+    uint32_t reg_offset = offset & 0xfff;
+    switch (reg_offset) {
+    case A_ROOT_GPT_BASE_CFG:
+        s->root.gpt_base_cfg = data;
+        return MEMTX_OK;
+    case A_ROOT_CR0:
+        s->root.cr0 = data;
+        s->root.cr0ack = s->root.cr0;
+        return MEMTX_OK;
+    default:
+        qemu_log_mask(LOG_UNIMP,
+                      "%s unhandled 32-bit access at 0x%"PRIx64" (WI)\n",
+                      __func__, offset);
+        /* TODO: Should we return MEMTX_OK? */
+        g_assert_not_reached();
+    }
+}
+
+static MemTxResult smmu_root_writell(SMMUv3State *s, hwaddr offset,
+                                     uint64_t data, MemTxAttrs attrs)
+{
+    uint32_t reg_offset = offset & 0xfff;
+    switch (reg_offset) {
+    case A_ROOT_GPT_BASE:
+        s->root.gpt_base = data;
+        return MEMTX_OK;
+    default:
+        qemu_log_mask(LOG_UNIMP,
+                      "%s unhandled 64-bit access at 0x%"PRIx64" (WI)\n",
+                      __func__, offset);
+        /* TODO: Should we return MEMTX_OK? */
+        g_assert_not_reached();
+    }
+}
+
+static MemTxResult smmu_write_mmio_root(SMMUv3State *s, hwaddr offset,
+                                        uint64_t data, unsigned size,
+                                        MemTxAttrs attrs)
+{
+    MemTxResult r;
+
+    switch (size) {
+    case 8:
+        r = smmu_root_writell(s, offset, data, attrs);
+        break;
+    case 4:
+        r = smmu_root_writel(s, offset, data, attrs);
+        break;
+    default:
+        r = MEMTX_ERROR;
+        break;
+    }
+
+    trace_smmuv3_write_mmio(offset, data, size, r);
+    return r;
+}
+
 static MemTxResult smmu_write_mmio(void *opaque, hwaddr offset, uint64_t data,
                                    unsigned size, MemTxAttrs attrs)
 {
@@ -2157,6 +2221,8 @@ static MemTxResult smmu_write_mmio(void *opaque, hwaddr offset, uint64_t data,
      */
     if (offset >= SMMU_REALM_REG_START) {
         reg_sec_sid = SMMU_SEC_SID_R;
+    } else if (offset >= SMMU_ROOT_REG_START) {
+        return smmu_write_mmio_root(s, offset, data, size, attrs);
     } else if (offset >= SMMU_SECURE_REG_START) {
         if (!smmu_check_secure_access(s, attrs, offset, false)) {
             trace_smmuv3_write_mmio(offset, data, size, MEMTX_OK);
@@ -2341,6 +2407,68 @@ static MemTxResult smmu_readl(SMMUv3State *s, hwaddr offset,
     }
 }
 
+static MemTxResult smmu_root_readl(SMMUv3State *s, hwaddr offset,
+                                   uint64_t *data, MemTxAttrs attrs)
+{
+    uint32_t reg_offset = offset & 0xfff;
+    switch (reg_offset) {
+    case A_ROOT_IDR0:
+        *data = s->root.idr0;
+        return MEMTX_OK;
+    case A_ROOT_CR0:
+        *data = s->root.cr0;
+        return MEMTX_OK;
+    case A_ROOT_CR0ACK:
+        *data = s->root.cr0ack;
+        return MEMTX_OK;
+    default:
+        qemu_log_mask(LOG_UNIMP,
+                      "%s unhandled 32-bit access at 0x%"PRIx64" (RAZ)\n",
+                      __func__, offset);
+        *data = 0;
+        /* TODO: Should we return MEMTX_OK? */
+        g_assert_not_reached();
+    }
+}
+
+static MemTxResult smmu_root_readll(SMMUv3State *s, hwaddr offset,
+                                    uint64_t *data, MemTxAttrs attrs)
+{
+    uint32_t reg_offset = offset & 0xfff;
+    switch (reg_offset) {
+    default:
+        qemu_log_mask(LOG_UNIMP,
+                      "%s unhandled 64-bit access at 0x%"PRIx64" (RAZ)\n",
+                      __func__, offset);
+        *data = 0;
+        /* TODO: Should we return MEMTX_OK? */
+        g_assert_not_reached();
+    }
+}
+
+static MemTxResult smmu_read_mmio_root(SMMUv3State *s, hwaddr offset,
+                                       uint64_t *data, unsigned size,
+                                       MemTxAttrs attrs)
+{
+    MemTxResult r;
+
+    switch (size) {
+    case 8:
+        r = smmu_root_readll(s, offset, data, attrs);
+        break;
+    case 4:
+        r = smmu_root_readl(s, offset, data, attrs);
+        break;
+    default:
+        r = MEMTX_ERROR;
+        break;
+    }
+
+    trace_smmuv3_read_mmio(offset, *data, size, r);
+    return r;
+}
+
+
 static MemTxResult smmu_read_mmio(void *opaque, hwaddr offset, uint64_t *data,
                                   unsigned size, MemTxAttrs attrs)
 {
@@ -2353,6 +2481,8 @@ static MemTxResult smmu_read_mmio(void *opaque, hwaddr offset, uint64_t *data,
     SMMUSecSID reg_sec_sid = SMMU_SEC_SID_NS;
     if (offset >= SMMU_REALM_REG_START) {
         reg_sec_sid = SMMU_SEC_SID_R;
+    } else if (offset >= SMMU_ROOT_REG_START) {
+        return smmu_read_mmio_root(s, offset, data, size, attrs);
     } else if (offset >= SMMU_SECURE_REG_START) {
         if (!smmu_check_secure_access(s, attrs, offset, true)) {
             *data = 0;
