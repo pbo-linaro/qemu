@@ -67,7 +67,7 @@ static inline AddressSpace *smmu_get_address_space(SMMUSecSID sec_sid)
         return &address_space_memory;
     case SMMU_SEC_SID_S:
         if (!arm_secure_as_available || arm_secure_address_space.root == NULL) {
-            printf("Secure address space requested but not available");
+            printf("Secure address space requested but not available\n");
             return NULL;
         }
         return &arm_secure_address_space;
