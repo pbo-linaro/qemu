@@ -567,7 +567,7 @@ static int smmu_ptw_64_s1(SMMUState *bs, SMMUTransCfg *cfg,
 
         /* Use NS if forced by previous NSTable=1 or current nscfg */
         int current_ns = forced_ns || nscfg;
-        SMMUSecSID sec_sid = current_ns ? SMMU_SEC_SID_NS : SMMU_SEC_SID_S;
+        SMMUSecSID sec_sid = SMMU_SEC_SID_NS;
         if (get_pte(baseaddr, offset, &pte, info, sec_sid)) {
                 goto error;
         }
@@ -655,7 +655,7 @@ static int smmu_ptw_64_s1(SMMUState *bs, SMMUTransCfg *cfg,
             goto error;
         }
 
-        tlbe->sec_sid = PTE_NS(pte) ? SMMU_SEC_SID_NS : SMMU_SEC_SID_S;
+        tlbe->sec_sid = SMMU_SEC_SID_NS;
         tlbe->entry.target_as = smmu_get_address_space(tlbe->sec_sid);
         if (!tlbe->entry.target_as) {
             info->type = SMMU_PTW_ERR_WALK_EABT;
