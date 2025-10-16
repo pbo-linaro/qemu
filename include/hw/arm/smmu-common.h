@@ -73,7 +73,7 @@ static inline AddressSpace *smmu_get_address_space(SMMUSecSID sec_sid)
         }
         return &arm_secure_address_space;
     default:
-        printf("Unknown SEC_SID value %d", sec_sid);
+        printf("Unknown SEC_SID value %d\n", sec_sid);
         return NULL;
     }
 }
