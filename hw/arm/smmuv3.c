@@ -1133,8 +1133,7 @@ static IOMMUTLBEntry smmuv3_translate(IOMMUMemoryRegion *mr, hwaddr addr,
     SMMUDevice *sdev = container_of(mr, SMMUDevice, iommu);
     SMMUv3State *s = sdev->smmu;
     uint32_t sid = smmu_get_sid(sdev);
-    /* TODO: detect Secure or Realm SEC_SID */
-    SMMUSecSID sec_sid = SMMU_SEC_SID_NS;
+    SMMUSecSID sec_sid = smmuv3_get_sec_sid(s, sid);
     SMMUv3RegBank *bank = smmuv3_bank(s, sec_sid);
     SMMUEventInfo event = {.type = SMMU_EVT_NONE,
                            .sid = sid,
@@ -1557,6 +1556,16 @@ static int smmuv3_cmdq_consume(SMMUv3State *s, SMMUSecSID sec_sid)
             }
             break;
         case SMMU_CMD_PREFETCH_CONFIG:
+        {
+            uint32_t sid = CMD_SID(&cmd);
+            SMMUSecSID old_sec_sid = smmuv3_get_sec_sid(s, sid);
+            if (old_sec_sid != sec_sid)
+            {
+                trace_smmuv3_transition_sec_sid_device(sid, old_sec_sid, sec_sid);
+                smmuv3_set_sec_sid(s, sid, sec_sid);
+            }
+            break;
+        }
         case SMMU_CMD_PREFETCH_ADDR:
             break;
         case SMMU_CMD_CFGI_STE:
@@ -2546,6 +2555,10 @@ static void smmu_reset_exit(Object *obj, ResetType type)
         c->parent_phases.exit(obj, type);
     }
 
+    if (s->sid_to_sec_sid) {
+        g_hash_table_destroy(s->sid_to_sec_sid);
+    }
+    s->sid_to_sec_sid = g_hash_table_new(NULL, NULL);
     smmuv3_init_regs(s);
 }
 
