@@ -112,6 +112,9 @@ struct SBSAMachineState {
 #define TYPE_SBSA_MACHINE   MACHINE_TYPE_NAME("sbsa-ref")
 OBJECT_DECLARE_SIMPLE_TYPE(SBSAMachineState, SBSA_MACHINE)
 
+AddressSpace arm_secure_address_space;
+AddressSpace arm_realm_address_space;
+
 static const MemMapEntry sbsa_ref_memmap[] = {
     /* 512M boot ROM */
     [SBSA_FLASH] =              {          0, 0x20000000 },
@@ -737,6 +740,9 @@ static void sbsa_ref_init(MachineState *machine)
     memory_region_init(secure_sysmem, OBJECT(machine), "secure-memory",
                        UINT64_MAX);
     memory_region_add_subregion_overlap(secure_sysmem, 0, sysmem, -1);
+
+    address_space_init(&arm_secure_address_space, secure_sysmem,
+            "secure-memory-space");
 
     firmware_loaded = sbsa_firmware_init(sms, sysmem, secure_sysmem);
 
