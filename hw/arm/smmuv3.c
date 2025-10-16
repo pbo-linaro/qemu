@@ -758,6 +758,8 @@ static int smmu_find_ste(SMMUv3State *s, uint32_t sid, STE *ste,
                       ~MAKE_64BIT_MASK(0, strtab_size_shift);
         l1_ste_offset = sid >> bank->sid_split;
         l2_ste_offset = sid & ((1 << bank->sid_split) - 1);
+        printf("l1ptr strtab_base=%"PRIx64" l1_ste_offset=%x\n",
+                strtab_base, l1_ste_offset);
         l1ptr = (dma_addr_t)(strtab_base + l1_ste_offset * sizeof(l1std));
         /* TODO: guarantee 64-bit single-copy atomicity */
         ret = dma_memory_read(cfg->as, l1ptr, &l1std, sizeof(l1std),
@@ -779,7 +781,7 @@ static int smmu_find_ste(SMMUv3State *s, uint32_t sid, STE *ste,
             /* l2ptr is not valid */
             if (!event->inval_ste_allowed) {
                 qemu_log_mask(LOG_GUEST_ERROR,
-                              "invalid sid=%d (L1STD span=0)\n", sid);
+                              "invalid sid=%d sec_sid=%d (L1STD span=0)\n", sid, sec_sid);
             }
             event->type = SMMU_EVT_C_BAD_STREAMID;
             return -EINVAL;
