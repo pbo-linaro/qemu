@@ -55,6 +55,8 @@ ARMSecuritySpace smmu_get_security_space(SMMUSecSID sec_sid)
     switch (sec_sid) {
     case SMMU_SEC_SID_S:
         return ARMSS_Secure;
+    case SMMU_SEC_SID_R:
+        return ARMSS_Realm;
     case SMMU_SEC_SID_NS:
     default:
         return ARMSS_NonSecure;
