@@ -65,7 +65,6 @@ static inline AddressSpace *smmu_get_address_space(SMMUSecSID sec_sid)
 {
     switch (sec_sid) {
     case SMMU_SEC_SID_NS:
-    case SMMU_SEC_SID_R:
         return &address_space_memory;
     case SMMU_SEC_SID_S:
         if (!arm_secure_as_available || arm_secure_address_space.root == NULL) {
