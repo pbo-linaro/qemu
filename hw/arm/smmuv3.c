@@ -337,7 +337,7 @@ static void smmuv3_init_regs(SMMUv3State *s)
 
     memset(sbk->idr, 0, sizeof(sbk->idr));
     sbk->idr[1] = FIELD_DP32(sbk->idr[1], S_IDR1, S_SIDSIZE, SMMU_IDR1_SIDSIZE);
-    sbk->idr[1] = FIELD_DP32(sbk->idr[1], S_IDR1, SECURE_IMPL, s->secure_impl);
+    sbk->idr[1] = FIELD_DP32(sbk->idr[1], S_IDR1, SECURE_IMPL, true);
     sbk->gbpa = SMMU_GBPA_RESET_VAL;
     sbk->cmdq.entry_size = sizeof(struct Cmd);
     sbk->eventq.entry_size = sizeof(struct Evt);
