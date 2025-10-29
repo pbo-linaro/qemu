@@ -360,7 +360,7 @@ static void smmuv3_reset(SMMUv3State *s)
     sbk->cmdq.cons = 0;
     sbk->cmdq.entry_size = sizeof(struct Cmd);
     sbk->idr[1] = FIELD_DP32(sbk->idr[1], S_IDR1, S_SIDSIZE, SMMU_IDR1_SIDSIZE);
-    sbk->idr[1] = FIELD_DP32(sbk->idr[1], S_IDR1, SECURE_IMPL, s->secure_impl);
+    sbk->idr[1] = FIELD_DP32(sbk->idr[1], S_IDR1, SECURE_IMPL, true);
     sbk->eventq.base = deposit64(sbk->eventq.base, 0, 5, SMMU_EVENTQS);
     sbk->eventq.prod = 0;
     sbk->eventq.cons = 0;
