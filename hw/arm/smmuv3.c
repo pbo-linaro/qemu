@@ -2388,10 +2388,10 @@ static MemTxResult smmu_readl(SMMUv3State *s, hwaddr offset,
 
     switch (reg_offset) {
     case A_IDREGS ... A_IDREGS + 0x2f:
-        *data = smmuv3_idreg(offset - A_IDREGS);
+        *data = smmuv3_idreg(reg_offset - A_IDREGS);
         return MEMTX_OK;
     case A_IDR0 ... A_IDR5:
-        *data = bank->idr[(offset - A_IDR0) / 4];
+        *data = bank->idr[(reg_offset - A_IDR0) / 4];
         return MEMTX_OK;
     case A_IIDR:
         *data = s->iidr;
