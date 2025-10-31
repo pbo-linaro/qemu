@@ -1122,6 +1122,7 @@ static SMMUTranslationStatus smmuv3_do_translate(SMMUv3State *s, hwaddr addr,
         default:
             g_assert_not_reached();
         }
+        print_stack_trace(stdout);
         return SMMU_TRANS_ERROR;
     }
     *out_entry = cached_entry;
