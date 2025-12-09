@@ -681,6 +681,45 @@ error:
     return -EINVAL;
 }
 
+/* AArch64.S2StartLevel */
+static int AArch64_S2StartLevel(int sl0 , int granule_sz)
+{
+    #define TGx_4KB 12
+    #define TGx_16KB 14
+    #define TGx_64KB 16
+    switch (granule_sz) {
+    case TGx_4KB:
+        switch (sl0) {
+        case 0b000: return 2;
+        case 0b001: return 1;
+        case 0b010: return 0;
+        case 0b011: return 3;
+        case 0b100: return -1;
+        default:
+            g_assert_not_reached();
+        }
+    case TGx_16KB:
+        switch (sl0) {
+        case 0b00: return 3;
+        case 0b01: return 2;
+        case 0b10: return 1;
+        case 0b11: return 0;
+        default:
+            g_assert_not_reached();
+        }
+    case TGx_64KB:
+        switch (sl0) {
+        case 0b00: return 3;
+        case 0b01: return 2;
+        case 0b10: return 1;
+        default:
+            g_assert_not_reached();
+        }
+    default:
+        g_assert_not_reached();
+    }
+}
+
 /**
  * smmu_ptw_64_s2 - VMSAv8-64 Walk of the page tables for a given ipa
  * for stage-2.
@@ -700,12 +739,64 @@ static int smmu_ptw_64_s2(SMMUState *bs, SMMUTransCfg *cfg,
                           dma_addr_t ipa, IOMMUAccessFlags perm,
                           SMMUTLBEntry *tlbe, SMMUPTWEventInfo *info)
 {
+
+    /*
+     * // AArch64.S2TTBaseAddress
+     * // Input Address size
+     * iasize          = AArch64.IASize(walkparams.txsz);
+     * granulebits = TGxGranuleBits(walkparams.tgx);
+     * descsizelog2 = if walkparams.d128 == '1' then 4 else 3;
+     * stride          = granulebits - descsizelog2;
+     * startlevel      = AArch64.S2StartLevel(walkparams);
+     * levels          = FINAL_LEVEL - startlevel;
+     *
+     *
+     * // Base address is aligned to size of the initial translation table in bytes
+     * tsize = (iasize - (levels*stride + granulebits)) + descsizelog2;
+     *
+     *
+     * if walkparams.d128 == '1' then
+     *     tsize = Max(tsize, 5);
+     *     if paspace == PAS_Secure then
+     *            tablebase<55:5> = ttbr<55:5>;
+     *     else
+     *            tablebase<55:5> = ttbr<87:80>:ttbr<47:5>;
+     * elsif walkparams.ds == '1' || (walkparams.tgx == TGx_64KB &&
+     *                                walkparams.ps == '110' &&
+     *            (IsFeatureImplemented(FEAT_LPA) ||
+     *            boolean IMPLEMENTATION_DEFINED
+     *            "BADDR expresses 52 bits for 64KB granule")) then
+     *     tsize = Max(tsize, 6);
+     *     tablebase<51:6> = ttbr<5:2>:ttbr<47:6>;
+     * else
+     *     tablebase<47:1> = ttbr<47:1>;
+     * tablebase = Align(tablebase, 2^tsize);
+     * return tablebase;
+     */
+
     const SMMUStage stage = SMMU_STAGE_2;
     int granule_sz = cfg->s2cfg.granule_sz;
     /* ARM DDI0487I.a: Table D8-7. */
     int inputsize = 64 - cfg->s2cfg.tsz;
     int level = get_start_level(cfg->s2cfg.sl0, granule_sz);
+    const int startlevel = AArch64_S2StartLevel(cfg->s2cfg.sl0, granule_sz);
+    g_assert(level == startlevel);
+
     int stride = VMSA_STRIDE(granule_sz);
+
+    const int granulebits = granule_sz;
+    const int descsizelog2 = 3;
+    const int expected_stride = granulebits - descsizelog2;
+    g_assert(stride == expected_stride);
+
+    const int FINAL_LEVEL = 3;
+    const int levels = FINAL_LEVEL - startlevel;
+    const int iasize = inputsize;
+    const int tsize = (iasize - (levels * stride + granulebits)) + descsizelog2;
+    (void)tsize;
+
+    g_assert(cfg->s2cfg.eff_ps != 0b110);
+
     int idx = pgd_concat_idx(level, granule_sz, ipa);
     /*
      * Get the ttb from concatenated structure.
@@ -713,8 +804,24 @@ static int smmu_ptw_64_s2(SMMUState *bs, SMMUTransCfg *cfg,
      */
     uint64_t baseaddr = extract64(cfg->s2cfg.vttb, 0, cfg->s2cfg.eff_ps) +
                                   (1 << stride) * idx * sizeof(uint64_t);
-    /* dma_addr_t indexmask = VMSA_IDXMSK(inputsize, stride, level); */
+    dma_addr_t indexmask = VMSA_IDXMSK(inputsize, stride, level);
+
+    if (baseaddr != (baseaddr & ~indexmask)) {
+        fprintf(stderr, "baseaddr=%"PRIx64" & ~indexmask=%"PRIx64"\n",
+                baseaddr, ~indexmask);
+        fprintf(stderr, "tsz=%d sl0=%d granule_sz=%d stride=%d level=%d\n",
+                cfg->s2cfg.tsz, cfg->s2cfg.sl0, granule_sz, stride, level);
+        g_assert_not_reached();
+    }
+
     /* baseaddr &= ~indexmask; */
+
+    const uint64_t tablebase = cfg->s2cfg.vttb;
+    const uint64_t final_addr = (tablebase >> tsize) << tsize;
+    if ((baseaddr & ~indexmask) != final_addr) {
+        fprintf(stderr, "%"PRIx64" & %"PRIx64"\n", baseaddr, final_addr);
+        g_assert_not_reached();
+    }
 
     /*
      * On input, a stage 2 Translation fault occurs if the IPA is outside the
