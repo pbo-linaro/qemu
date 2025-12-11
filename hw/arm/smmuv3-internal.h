@@ -257,6 +257,7 @@ REG32(ROOT_IDR0,            0x0)
 
 REG32(ROOT_IIDR,             0x8)
 REG32(ROOT_CR0,             0x20)
+    FIELD(ROOT_CR0, GPCEN, 1, 1)
 REG32(ROOT_CR0ACK,          0x24)
 REG64(ROOT_GPT_BASE,        0x28)
 REG64(ROOT_GPT_BASE_CFG,    0x30)
