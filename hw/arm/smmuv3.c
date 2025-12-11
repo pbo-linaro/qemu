@@ -109,13 +109,14 @@ static void smmuv3_write_gerrorn(SMMUv3State *s, uint32_t new_gerrorn,
     trace_smmuv3_write_gerrorn(toggled & pending, bank->gerrorn);
 }
 
-static inline MemTxResult queue_read(SMMUQueue *q, Cmd *cmd, SMMUSecSID sec_sid)
+static inline MemTxResult queue_read(SMMUState *bs, SMMUQueue *q,
+                                     Cmd *cmd, SMMUSecSID sec_sid)
 {
     dma_addr_t addr = Q_CONS_ENTRY(q);
     MemTxResult ret;
     int i;
 
-    ret = dma_memory_read(&address_space_memory, addr, cmd, sizeof(Cmd),
+    ret = dma_memory_read(&bs->memory_as, addr, cmd, sizeof(Cmd),
                           MEMTXATTRS_UNSPECIFIED);
     if (ret != MEMTX_OK) {
         return ret;
@@ -126,7 +127,7 @@ static inline MemTxResult queue_read(SMMUQueue *q, Cmd *cmd, SMMUSecSID sec_sid)
     return ret;
 }
 
-static MemTxResult queue_write(SMMUQueue *q, Evt *evt_in)
+static MemTxResult queue_write(SMMUState *bs, SMMUQueue *q, Evt *evt_in)
 {
     dma_addr_t addr = Q_PROD_ENTRY(q);
     MemTxResult ret;
@@ -136,7 +137,7 @@ static MemTxResult queue_write(SMMUQueue *q, Evt *evt_in)
     for (i = 0; i < ARRAY_SIZE(evt.word); i++) {
         cpu_to_le32s(&evt.word[i]);
     }
-    ret = dma_memory_write(&address_space_memory, addr, &evt, sizeof(Evt),
+    ret = dma_memory_write(&bs->memory_as, addr, &evt, sizeof(Evt),
                            MEMTXATTRS_UNSPECIFIED);
     if (ret != MEMTX_OK) {
         return ret;
@@ -161,7 +162,7 @@ static MemTxResult smmuv3_write_eventq(SMMUv3State *s, SMMUSecSID sec_sid,
         return MEMTX_ERROR;
     }
 
-    r = queue_write(q, evt);
+    r = queue_write(&s->smmu_state, q, evt);
     if (r != MEMTX_OK) {
         return r;
     }
@@ -992,7 +993,7 @@ static SMMUTransCfg *smmuv3_get_config(SMMUDevice *sdev, SMMUEventInfo *event,
         cfg = g_new0(SMMUTransCfg, 1);
         cfg->sec_sid = sec_sid;
         cfg->txattrs = smmu_get_txattrs(sec_sid);
-        cfg->as = smmu_get_address_space(sec_sid);
+        cfg->as = smmu_get_address_space(bc, sec_sid);
         if (!cfg->as) {
             /* Can't get AddressSpace, free cfg and return. */
             g_free(cfg);
@@ -1195,7 +1196,7 @@ static IOMMUTLBEntry smmuv3_translate(IOMMUMemoryRegion *mr, hwaddr addr,
     SMMUTranslationStatus status;
     SMMUTransCfg *cfg = NULL;
     IOMMUTLBEntry entry = {
-        .target_as = &address_space_memory,
+        .target_as = &s->smmu_state.memory_as,
         .iova = addr,
         .translated_addr = addr,
         .addr_mask = ~(hwaddr)0,
@@ -1296,6 +1297,8 @@ static void smmuv3_notify_iova(IOMMUMemoryRegion *mr,
                                SMMUSecSID sec_sid)
 {
     SMMUDevice *sdev = container_of(mr, SMMUDevice, iommu);
+    SMMUv3State *s3 = sdev->smmu;
+    SMMUState *bs = &(s3->smmu_state);
     SMMUEventInfo eventinfo = {.sec_sid = sec_sid,
                                .inval_ste_allowed = true};
     SMMUTransCfg *cfg = smmuv3_get_config(sdev, &eventinfo, sec_sid);
@@ -1343,7 +1346,7 @@ static void smmuv3_notify_iova(IOMMUMemoryRegion *mr,
     }
 
     event.type = IOMMU_NOTIFIER_UNMAP;
-    event.entry.target_as = smmu_get_address_space(sec_sid);
+    event.entry.target_as = smmu_get_address_space(bs, sec_sid);
     event.entry.iova = iova;
     event.entry.addr_mask = num_pages * (1 << granule) - 1;
     event.entry.perm = IOMMU_NONE;
@@ -1592,7 +1595,7 @@ static int smmuv3_cmdq_consume(SMMUv3State *s, SMMUSecSID sec_sid)
             break;
         }
 
-        if (queue_read(q, &cmd, sec_sid) != MEMTX_OK) {
+        if (queue_read(&s->smmu_state, q, &cmd, sec_sid) != MEMTX_OK) {
             cmd_error = SMMU_CERROR_ABT;
             break;
         }
@@ -1623,7 +1626,7 @@ static int smmuv3_cmdq_consume(SMMUv3State *s, SMMUSecSID sec_sid)
             SMMUTransCfg *cfg = g_new0(SMMUTransCfg, 1);
             cfg->sec_sid = sec_sid;
             cfg->txattrs = smmu_get_txattrs(sec_sid);
-            cfg->as = smmu_get_address_space(sec_sid);
+            cfg->as = smmu_get_address_space(bs, sec_sid);
             if (!cfg->as) {
                 g_free(cfg);
                 qemu_log_mask(LOG_GUEST_ERROR, "SMMUv3 Can't get address space\n");
