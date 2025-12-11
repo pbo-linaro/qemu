@@ -257,15 +257,53 @@ REG32(ROOT_IDR0,            0x0)
 
 REG32(ROOT_IIDR,             0x8)
 REG32(ROOT_CR0,             0x20)
+    FIELD(ROOT_CR0, GPCEN, 1, 1)
 REG32(ROOT_CR0ACK,          0x24)
 REG64(ROOT_GPT_BASE,        0x28)
 REG64(ROOT_GPT_BASE_CFG,    0x30)
 REG64(ROOT_GPF_FAR,         0x38)
+    FIELD(ROOT_GPF_FAR, FAULT,      0,  1)
+    FIELD(ROOT_GPF_FAR, REASON,     1,  3)
+    FIELD(ROOT_GPF_FAR, FAULTCODE,  4,  8)
+    FIELD(ROOT_GPF_FAR, FADDR,     12, 44)
+    FIELD(ROOT_GPF_FAR, FPAS,      62,  2)
 REG64(ROOT_GPT_CFG_FAR,     0x40)
 REG64(ROOT_TLBI,            0x50)
 REG32(ROOT_TLBI_CTRL,       0x58)
 REG64(ROOT_GPT_BASE2,       0x60)
 REG32(ROOT_GPT_BASE_UPDATE, 0x68)
+
+typedef enum SMMUGpcReason {
+    SMMU_GPC_REASON_TRANSLATION = 0b001,
+    SMMU_GPC_REASON_GERROR = 0b010,
+    SMMU_GPC_REASON_TRANSACTION = 0b011
+} SMMUGpcReason;
+
+typedef enum SMMUGpfTranslation {
+    SMMU_GPF_STE_FETCH = 0x03,
+    SMMU_GPF_CD_FETCH = 0x09,
+    SMMU_GPF_WALK_EABT = 0x0B,
+    SMMU_GPF_VMS_FETCH = 0x25,
+} SMMUGpfTranslation;
+
+typedef enum SMMUGpfGerror {
+    SMMU_CMDQ_GPF = 0x00,
+    SMMU_EVENTQ_GPF = 0x02,
+    SMMU_PRIQ_GPF = 0x03,
+    SMMU_MSI_CMDQ_GPF = 0x04,
+    SMMU_MSI_EVENTQ_GPF = 0x05,
+    SMMU_MSI_PRIQ_GPF = 0x06,
+    SMMU_MSI_GERROR_GPF = 0x07,
+    SMMU_OTHER_GPF = 0x10,
+} SMMUGpfGerror;
+
+typedef struct SMMUGpc {
+    SMMUGpcReason reason;
+    union {
+        SMMUGpfTranslation translation;
+        SMMUGpfGerror gerror;
+    };
+} SMMUGpc;
 
 static inline int smmu_enabled(SMMUv3State *s, SMMUSecSID sec_sid)
 {
@@ -555,6 +593,7 @@ typedef struct SMMUEventInfo {
             uint32_t ssid;
             bool ssv;
             dma_addr_t addr;
+            bool gpcf;
        } f_ste_fetch;
        struct SSIDInfo c_bad_ste;
        struct {
@@ -578,6 +617,7 @@ typedef struct SMMUEventInfo {
             bool ind;
             uint8_t class;
             dma_addr_t addr2;
+            bool gpcf;
        } f_walk_eabt;
        struct FullInfo f_translation;
        struct FullInfo f_addr_size;
@@ -605,6 +645,7 @@ typedef struct SMMUEventInfo {
 #define EVT_SET_SID(x, v)   ((x)->word[1] = v)
 #define EVT_SET_STAG(x, v)  ((x)->word[2] = deposit32((x)->word[2], 0 , 16, v))
 #define EVT_SET_STALL(x, v) ((x)->word[2] = deposit32((x)->word[2], 31, 1 , v))
+#define EVT_SET_GPCF(x, v)  ((x)->word[2] = deposit32((x)->word[2], 16, 1 , v))
 #define EVT_SET_PNU(x, v)   ((x)->word[3] = deposit32((x)->word[3], 1 , 1 , v))
 #define EVT_SET_IND(x, v)   ((x)->word[3] = deposit32((x)->word[3], 2 , 1 , v))
 #define EVT_SET_RNW(x, v)   ((x)->word[3] = deposit32((x)->word[3], 3 , 1 , v))
