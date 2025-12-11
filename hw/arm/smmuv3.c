@@ -26,6 +26,7 @@
 #include "hw/pci/pci.h"
 #include "cpu.h"
 #include "exec/target_page.h"
+#include "target/arm/internals.h"
 #include "trace.h"
 #include "qemu/log.h"
 #include "qemu/error-report.h"
@@ -1055,10 +1056,36 @@ static SMMUTranslationStatus smmuv3_do_translate(SMMUv3State *s, hwaddr addr,
     }
 
     cached_entry = smmu_translate(bs, cfg, addr, flag, &ptw_info);
-
     if (desc_s2_translation) {
         cfg->asid = asid;
         cfg->stage = stage;
+    }
+
+    if (cached_entry) {
+        /*
+         * The fields in SMMU_ROOT_GPT_BASE_CFG are the same as for GPCCR_EL3,
+         * except there is no copy of GPCCR_EL3.GPC. See SMMU_ROOT_CR0.GPCEN.
+         */
+        const bool gpc_enabled = FIELD_EX32(s->root.cr0, ROOT_CR0, GPCEN);
+        if (gpc_enabled) {
+            hwaddr paddress = CACHED_ENTRY_TO_ADDR(cached_entry, addr);
+            ARMSecuritySpace pspace = sec_sid_to_security_space(cfg->sec_sid);
+            ARMSecuritySpace ss = ARMSS_Root;
+            ARMMMUFaultInfo fi;
+
+            ARMGranuleProtectionConfig config = {
+                .gpccr = s->root.gpt_base_cfg,
+                .gptbr = s->root.gpt_base >> 12,
+                .parange = 6, /* 52 bits */
+                .support_sel2 = false,
+                .gpt_as = &s->smmu_state.secure_memory_as
+            };
+            if (!arm_granule_protection_check(config, paddress,
+                                              pspace, ss, &fi)) {
+                printf("ERROR: fi.type=%d fi.gpcf=%d\n", fi.type, fi.gpcf);
+                g_assert_not_reached();
+            }
+        }
     }
 
     if (!cached_entry) {
