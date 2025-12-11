@@ -405,13 +405,13 @@ void smmu_iotlb_inv_vmid_s1(SMMUState *s, int vmid)
  * get_pte - Get the content of a page table entry located at
  * @base_addr[@index]
  */
-static int get_pte(dma_addr_t baseaddr, uint32_t index, uint64_t *pte,
-                   SMMUPTWEventInfo *info, SMMUSecSID sec_sid)
+static int get_pte(SMMUState *bs, dma_addr_t baseaddr, uint32_t index,
+                   uint64_t *pte, SMMUPTWEventInfo *info, SMMUSecSID sec_sid)
 {
     int ret;
     dma_addr_t addr = baseaddr + index * sizeof(*pte);
     MemTxAttrs attrs = smmu_get_txattrs(sec_sid);
-    AddressSpace *as = smmu_get_address_space(sec_sid);
+    AddressSpace *as = smmu_get_address_space(bs, sec_sid);
     if (!as) {
         info->type = SMMU_PTW_ERR_WALK_EABT;
         info->addr = addr;
@@ -570,7 +570,7 @@ static int smmu_ptw_64_s1(SMMUState *bs, SMMUTransCfg *cfg,
         /* Use NS if forced by previous NSTable=1 or current nscfg */
         int current_ns = forced_ns || nscfg;
         SMMUSecSID sec_sid = SMMU_SEC_SID_NS;
-        if (get_pte(baseaddr, offset, &pte, info, sec_sid)) {
+        if (get_pte(bs, baseaddr, offset, &pte, info, sec_sid)) {
                 goto error;
         }
         trace_smmu_ptw_level(stage, level, iova, subpage_size,
@@ -658,7 +658,7 @@ static int smmu_ptw_64_s1(SMMUState *bs, SMMUTransCfg *cfg,
         }
 
         tlbe->sec_sid = SMMU_SEC_SID_NS;
-        tlbe->entry.target_as = smmu_get_address_space(tlbe->sec_sid);
+        tlbe->entry.target_as = smmu_get_address_space(bs, tlbe->sec_sid);
         if (!tlbe->entry.target_as) {
             info->type = SMMU_PTW_ERR_WALK_EABT;
             info->addr = gpa;
@@ -684,6 +684,7 @@ error:
 /**
  * smmu_ptw_64_s2 - VMSAv8-64 Walk of the page tables for a given ipa
  * for stage-2.
+ * @bs: SMMU base state
  * @cfg: translation config
  * @ipa: ipa to translate
  * @perm: access type
@@ -695,7 +696,7 @@ error:
  * Upon success, @tlbe is filled with translated_addr and entry
  * permission rights.
  */
-static int smmu_ptw_64_s2(SMMUTransCfg *cfg,
+static int smmu_ptw_64_s2(SMMUState *bs, SMMUTransCfg *cfg,
                           dma_addr_t ipa, IOMMUAccessFlags perm,
                           SMMUTLBEntry *tlbe, SMMUPTWEventInfo *info)
 {
@@ -733,7 +734,7 @@ static int smmu_ptw_64_s2(SMMUTransCfg *cfg,
         uint8_t s2ap;
 
         /* Use NS as Secure Stage 2 is not implemented (SMMU_S_IDR1.SEL2 == 0)*/
-        if (get_pte(baseaddr, offset, &pte, info, SMMU_SEC_SID_NS)) {
+        if (get_pte(bs, baseaddr, offset, &pte, info, SMMU_SEC_SID_NS)) {
                 goto error;
         }
         trace_smmu_ptw_level(stage, level, ipa, subpage_size,
@@ -787,7 +788,7 @@ static int smmu_ptw_64_s2(SMMUTransCfg *cfg,
         }
 
         tlbe->sec_sid = SMMU_SEC_SID_NS;
-        tlbe->entry.target_as = &address_space_memory;
+        tlbe->entry.target_as = &bs->memory_as;
         tlbe->entry.translated_addr = gpa;
         tlbe->entry.iova = ipa & ~mask;
         tlbe->entry.addr_mask = mask;
@@ -863,7 +864,7 @@ int smmu_ptw(SMMUState *bs, SMMUTransCfg *cfg, dma_addr_t iova,
             return -EINVAL;
         }
 
-        return smmu_ptw_64_s2(cfg, iova, perm, tlbe, info);
+        return smmu_ptw_64_s2(bs, cfg, iova, perm, tlbe, info);
     }
 
     /* SMMU_NESTED. */
@@ -884,7 +885,7 @@ int smmu_ptw(SMMUState *bs, SMMUTransCfg *cfg, dma_addr_t iova,
     }
 
     ipa = CACHED_ENTRY_TO_ADDR(tlbe, iova);
-    ret = smmu_ptw_64_s2(cfg, ipa, perm, &tlbe_s2, info);
+    ret = smmu_ptw_64_s2(bs, cfg, ipa, perm, &tlbe_s2, info);
     if (ret) {
         return ret;
     }
