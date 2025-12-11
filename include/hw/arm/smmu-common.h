@@ -57,30 +57,6 @@ extern bool arm_secure_as_available;
 void smmu_enable_secure_address_space(void);
 
 /*
- * Return the address space corresponding to the SEC_SID.
- * If SEC_SID is Secure, but secure address space is not available,
- * return NULL and print a warning message.
- */
-static inline AddressSpace *smmu_get_address_space(SMMUSecSID sec_sid)
-{
-    switch (sec_sid) {
-    case SMMU_SEC_SID_NS:
-        return &address_space_memory;
-    case SMMU_SEC_SID_R:
-        return &address_space_memory;
-    case SMMU_SEC_SID_S:
-        if (!arm_secure_as_available || arm_secure_address_space.root == NULL) {
-            printf("Secure address space requested but not available\n");
-            return NULL;
-        }
-        return &arm_secure_address_space;
-    default:
-        printf("Unknown SEC_SID value %d\n", sec_sid);
-        return NULL;
-    }
-}
-
-/*
  * Page table walk error types
  */
 typedef enum {
@@ -229,6 +205,31 @@ struct SMMUBaseClass {
     DeviceRealize parent_realize;
 
 };
+
+/*
+ * Return the address space corresponding to the SEC_SID.
+ * If SEC_SID is Secure, but secure address space is not available,
+ * return NULL and print a warning message.
+ */
+static inline AddressSpace *smmu_get_address_space(struct SMMUState *bs,
+                                                   SMMUSecSID sec_sid)
+{
+    switch (sec_sid) {
+    case SMMU_SEC_SID_NS:
+        return &bs->memory_as;
+    case SMMU_SEC_SID_R:
+        return &bs->memory_as;
+    case SMMU_SEC_SID_S:
+        if (!bs->secure_memory) {
+            printf("Secure address space requested but not available\n");
+            return NULL;
+        }
+        return &bs->secure_memory_as;
+    default:
+        printf("Unknown SEC_SID value %d\n", sec_sid);
+        return NULL;
+    }
+}
 
 #define TYPE_ARM_SMMU "arm-smmu"
 OBJECT_DECLARE_TYPE(SMMUState, SMMUBaseClass, ARM_SMMU)
