@@ -1069,6 +1069,8 @@ static SMMUTranslationStatus smmuv3_do_translate(SMMUv3State *s, hwaddr addr,
         const bool gpc_enabled = FIELD_EX32(s->root.cr0, ROOT_CR0, GPCEN);
         if (gpc_enabled) {
             hwaddr paddress = CACHED_ENTRY_TO_ADDR(cached_entry, addr);
+            bool sel2_enabled = FIELD_EX32(s->bank[SMMU_SEC_SID_S].idr[1], S_IDR1, SEL2);
+
             ARMSecuritySpace pspace = sec_sid_to_security_space(cfg->sec_sid);
             ARMSecuritySpace ss = ARMSS_Root;
             ARMMMUFaultInfo fi;
@@ -1077,13 +1079,19 @@ static SMMUTranslationStatus smmuv3_do_translate(SMMUv3State *s, hwaddr addr,
                 .gpccr = s->root.gpt_base_cfg,
                 .gptbr = s->root.gpt_base >> 12,
                 .parange = 6, /* 52 bits */
-                .support_sel2 = false,
+                .support_sel2 = sel2_enabled,
                 .gpt_as = &s->smmu_state.secure_memory_as
             };
             if (!arm_granule_protection_check(config, paddress,
                                               pspace, ss, &fi)) {
-                printf("ERROR: fi.type=%d fi.gpcf=%d\n", fi.type, fi.gpcf);
-                g_assert_not_reached();
+                trace_smmuv3_gpc_fault(cfg->sec_sid, cfg->asid,
+                                       addr, paddress,
+                                       fi.gpcf);
+                cached_entry = NULL;
+                ptw_info.type = SMMU_PTW_ERR_WALK_EABT;
+            } else {
+                trace_smmuv3_gpc_success(cfg->sec_sid, cfg->asid,
+                                         addr, paddress);
             }
         }
     }
