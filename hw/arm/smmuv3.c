@@ -209,6 +209,7 @@ void smmuv3_record_event(SMMUv3State *s, SMMUEventInfo *info)
         EVT_SET_SSID(&evt, info->u.f_ste_fetch.ssid);
         EVT_SET_SSV(&evt,  info->u.f_ste_fetch.ssv);
         EVT_SET_ADDR2(&evt, info->u.f_ste_fetch.addr);
+        EVT_SET_GPCF(&evt, info->u.f_ste_fetch.gpcf);
         break;
     case SMMU_EVT_C_BAD_STE:
         EVT_SET_SSID(&evt, info->u.c_bad_ste.ssid);
@@ -227,12 +228,15 @@ void smmuv3_record_event(SMMUv3State *s, SMMUEventInfo *info)
         EVT_SET_SSID(&evt, info->u.f_cd_fetch.ssid);
         EVT_SET_SSV(&evt,  info->u.f_cd_fetch.ssv);
         EVT_SET_ADDR(&evt, info->u.f_cd_fetch.addr);
+        EVT_SET_GPCF(&evt, info->u.f_cd_fetch.gpcf);
         break;
     case SMMU_EVT_C_BAD_CD:
         EVT_SET_SSID(&evt, info->u.c_bad_cd.ssid);
         EVT_SET_SSV(&evt,  info->u.c_bad_cd.ssv);
         break;
     case SMMU_EVT_F_WALK_EABT:
+        EVT_SET_GPCF(&evt, info->u.f_walk_eabt.gpcf);
+        /* fallthrough */
     case SMMU_EVT_F_TRANSLATION:
     case SMMU_EVT_F_ADDR_SIZE:
     case SMMU_EVT_F_ACCESS:
@@ -1089,6 +1093,7 @@ static SMMUTranslationStatus smmuv3_do_translate(SMMUv3State *s, hwaddr addr,
                                        fi.gpcf);
                 cached_entry = NULL;
                 ptw_info.type = SMMU_PTW_ERR_WALK_EABT;
+                event->u.f_walk_eabt.gpcf = true;
             } else {
                 trace_smmuv3_gpc_success(cfg->sec_sid, cfg->asid,
                                          addr, paddress);
