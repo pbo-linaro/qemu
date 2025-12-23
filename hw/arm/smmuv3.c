@@ -41,6 +41,41 @@
                                         ((ptw_info).stage == SMMU_STAGE_2 && \
                                         (cfg)->s2cfg.record_faults))
 
+static bool smmuv3_granule_protection_check(SMMUv3State *s,  SMMUTransCfg *cfg,
+                                            vaddr vaddr, hwaddr paddr)
+{
+    /*
+     * The fields in SMMU_ROOT_GPT_BASE_CFG are the same as for GPCCR_EL3,
+     * except there is no copy of GPCCR_EL3.GPC. See SMMU_ROOT_CR0.GPCEN.
+     */
+    const bool gpc_enabled = FIELD_EX32(s->root.cr0, ROOT_CR0, GPCEN);
+    if (!gpc_enabled) {
+        return true;
+    }
+
+    bool sel2_enabled = FIELD_EX32(s->bank[SMMU_SEC_SID_S].idr[1], S_IDR1, SEL2);
+
+    ARMSecuritySpace pspace = sec_sid_to_security_space(cfg->sec_sid);
+    ARMSecuritySpace ss = ARMSS_Root;
+    ARMMMUFaultInfo fi;
+
+    ARMGranuleProtectionConfig config = {
+        .gpccr = s->root.gpt_base_cfg,
+        .gptbr = s->root.gpt_base >> 12,
+        .parange = 6, /* 52 bits */
+        .support_sel2 = sel2_enabled,
+        .gpt_as = &s->smmu_state.secure_memory_as
+    };
+
+    if (!arm_granule_protection_check(config, paddr, pspace, ss, &fi)) {
+        trace_smmuv3_gpc_fault(cfg->sec_sid, cfg->asid, vaddr, paddr, fi.gpcf);
+        return false;
+    }
+
+    trace_smmuv3_gpc_success(cfg->sec_sid, cfg->asid, vaddr, paddr);
+    return true;
+}
+
 /**
  * smmuv3_trigger_irq - pulse @irq if enabled and update
  * GERROR register in case of GERROR interrupt
@@ -1066,38 +1101,11 @@ static SMMUTranslationStatus smmuv3_do_translate(SMMUv3State *s, hwaddr addr,
     }
 
     if (cached_entry) {
-        /*
-         * The fields in SMMU_ROOT_GPT_BASE_CFG are the same as for GPCCR_EL3,
-         * except there is no copy of GPCCR_EL3.GPC. See SMMU_ROOT_CR0.GPCEN.
-         */
-        const bool gpc_enabled = FIELD_EX32(s->root.cr0, ROOT_CR0, GPCEN);
-        if (gpc_enabled) {
-            hwaddr paddress = CACHED_ENTRY_TO_ADDR(cached_entry, addr);
-            bool sel2_enabled = FIELD_EX32(s->bank[SMMU_SEC_SID_S].idr[1], S_IDR1, SEL2);
-
-            ARMSecuritySpace pspace = sec_sid_to_security_space(cfg->sec_sid);
-            ARMSecuritySpace ss = ARMSS_Root;
-            ARMMMUFaultInfo fi;
-
-            ARMGranuleProtectionConfig config = {
-                .gpccr = s->root.gpt_base_cfg,
-                .gptbr = s->root.gpt_base >> 12,
-                .parange = 6, /* 52 bits */
-                .support_sel2 = sel2_enabled,
-                .gpt_as = &s->smmu_state.secure_memory_as
-            };
-            if (!arm_granule_protection_check(config, paddress,
-                                              pspace, ss, &fi)) {
-                trace_smmuv3_gpc_fault(cfg->sec_sid, cfg->asid,
-                                       addr, paddress,
-                                       fi.gpcf);
-                cached_entry = NULL;
-                ptw_info.type = SMMU_PTW_ERR_WALK_EABT;
-                event->u.f_walk_eabt.gpcf = true;
-            } else {
-                trace_smmuv3_gpc_success(cfg->sec_sid, cfg->asid,
-                                         addr, paddress);
-            }
+        hwaddr paddr = CACHED_ENTRY_TO_ADDR(cached_entry, addr);
+        if (!smmuv3_granule_protection_check(s, cfg, addr, paddr)) {
+            cached_entry = NULL;
+            ptw_info.type = SMMU_PTW_ERR_WALK_EABT;
+            event->u.f_walk_eabt.gpcf = true;
         }
     }
 
