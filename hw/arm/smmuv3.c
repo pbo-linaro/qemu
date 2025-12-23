@@ -42,7 +42,7 @@
                                         (cfg)->s2cfg.record_faults))
 
 static bool smmuv3_granule_protection_check(SMMUv3State *s,  SMMUTransCfg *cfg,
-                                            vaddr vaddr, hwaddr paddr)
+                                            hwaddr iova, hwaddr translated)
 {
     /*
      * The fields in SMMU_ROOT_GPT_BASE_CFG are the same as for GPCCR_EL3,
@@ -67,12 +67,13 @@ static bool smmuv3_granule_protection_check(SMMUv3State *s,  SMMUTransCfg *cfg,
         .gpt_as = &s->smmu_state.secure_memory_as
     };
 
-    if (!arm_granule_protection_check(config, paddr, pspace, ss, &fi)) {
-        trace_smmuv3_gpc_fault(cfg->sec_sid, cfg->asid, vaddr, paddr, fi.gpcf);
+    if (!arm_granule_protection_check(config, translated, pspace, ss, &fi)) {
+        trace_smmuv3_gpc_fault(cfg->sec_sid, cfg->asid,
+                               iova, translated, fi.gpcf);
         return false;
     }
 
-    trace_smmuv3_gpc_success(cfg->sec_sid, cfg->asid, vaddr, paddr);
+    trace_smmuv3_gpc_success(cfg->sec_sid, cfg->asid, iova, translated);
     return true;
 }
 
@@ -489,6 +490,7 @@ static int smmu_get_cd(SMMUv3State *s, STE *ste, SMMUTransCfg *cfg,
                        uint32_t ssid, CD *buf, SMMUEventInfo *event)
 {
     dma_addr_t addr = STE_CTXPTR(ste);
+    const dma_addr_t iova = addr;
     int ret, i;
     SMMUTranslationStatus status;
     SMMUTLBEntry *entry;
@@ -514,6 +516,14 @@ static int smmu_get_cd(SMMUv3State *s, STE *ste, SMMUTransCfg *cfg,
                       "Cannot fetch pte at address=0x%"PRIx64"\n", addr);
         event->type = SMMU_EVT_F_CD_FETCH;
         event->u.f_cd_fetch.addr = addr;
+        return -EINVAL;
+    }
+    if (!smmuv3_granule_protection_check(s, cfg, iova, addr)) {
+        qemu_log_mask(LOG_GUEST_ERROR,
+                      "GPC fail for pte at address=0x%"PRIx64"\n", addr);
+        event->type = SMMU_EVT_F_CD_FETCH;
+        event->u.f_cd_fetch.addr = addr;
+        event->u.f_cd_fetch.gpcf = true;
         return -EINVAL;
     }
     for (i = 0; i < ARRAY_SIZE(buf->word); i++) {
@@ -810,6 +820,14 @@ static int smmu_find_ste(SMMUv3State *s, uint32_t sid, STE *ste,
             event->u.f_ste_fetch.addr = l1ptr;
             return -EINVAL;
         }
+        if (!smmuv3_granule_protection_check(s, cfg, l1ptr, l1ptr)) {
+            qemu_log_mask(LOG_GUEST_ERROR,
+                          "GPC fail for L1PTR at 0x%"PRIx64"\n", l1ptr);
+            event->type = SMMU_EVT_F_CD_FETCH;
+            event->u.f_ste_fetch.addr = l1ptr;
+            event->u.f_ste_fetch.gpcf = true;
+            return -EINVAL;
+        }
         for (i = 0; i < ARRAY_SIZE(l1std.word); i++) {
             le32_to_cpus(&l1std.word[i]);
         }
@@ -1101,8 +1119,8 @@ static SMMUTranslationStatus smmuv3_do_translate(SMMUv3State *s, hwaddr addr,
     }
 
     if (cached_entry) {
-        hwaddr paddr = CACHED_ENTRY_TO_ADDR(cached_entry, addr);
-        if (!smmuv3_granule_protection_check(s, cfg, addr, paddr)) {
+        hwaddr translated = CACHED_ENTRY_TO_ADDR(cached_entry, addr);
+        if (!smmuv3_granule_protection_check(s, cfg, addr, translated)) {
             cached_entry = NULL;
             ptw_info.type = SMMU_PTW_ERR_WALK_EABT;
             event->u.f_walk_eabt.gpcf = true;
