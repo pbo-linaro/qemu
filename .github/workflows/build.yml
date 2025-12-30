@@ -75,11 +75,11 @@ jobs:
       - run: >
           podman run --pull newer --init --rm -it -v $(pwd):$(pwd) -w $(pwd)
           docker.io/pbolinaro/qemu-ci:debian
-          ./build/qemu-system-x86_64 -nographic -plugin ./build/contrib/plugins/libstoptrigger,icount=1000000 -plugin ./build/tests/tcg/plugins/libinsn -d plugin
+          ./build/qemu-system-x86_64 -nographic -plugin ./build/contrib/plugins/libstoptrigger,icount=1000000 -plugin ./build/tests/tcg/plugins/libinsn -plugin ./build/contrib/plugins/libcpp -d plugin
       - run: >
           podman run --pull newer --init --rm -it -v $(pwd):$(pwd) -w $(pwd)
           docker.io/pbolinaro/qemu-ci:debian
-          ./build/qemu-${{matrix.arch}} -plugin ./build/contrib/plugins/libstoptrigger,icount=1000000  -plugin ./build/tests/tcg/plugins/libinsn -d plugin ./build/qemu-system-x86_64 --version
+          ./build/qemu-${{matrix.arch}} -plugin ./build/contrib/plugins/libstoptrigger,icount=1000000  -plugin ./build/tests/tcg/plugins/libinsn -plugin ./build/contrib/plugins/libcpp -d plugin ./build/qemu-system-x86_64 --version
 
   build-cross-mingw64:
     needs: checkapply
@@ -145,7 +145,7 @@ jobs:
       # https://ten0s.github.io/blog/2022/07/01/debugging-dll-loading-errors
       - run: /c/Program\ Files\ \(x86\)/Windows\ Kits/10/Debuggers/${{matrix.arch}}/gflags.exe -i qemu-system-x86_64.exe +sls
       - run: /c/Program\ Files\ \(x86\)/Windows\ Kits/10/Debuggers/${{matrix.arch}}/cdb.exe -c 'g;q' ./build/qemu-system-x86_64.exe --version || true
-      - run: ./build/qemu-system-x86_64.exe -nographic -plugin ./build/contrib/plugins/libstoptrigger,icount=1000000 -plugin ./build/tests/tcg/plugins/libinsn -d plugin
+      - run: ./build/qemu-system-x86_64.exe -nographic -plugin ./build/contrib/plugins/libstoptrigger,icount=1000000 -plugin ./build/tests/tcg/plugins/libinsn -plugin ./build/contrib/plugins/libcpp -d plugin
 
 
   build-macos:
@@ -164,7 +164,7 @@ jobs:
       - run: brew uninstall cmake # conflict with install command below
       - run: brew install --quiet $(brew deps --include-build qemu)
       - run: ./configure && ninja -C build
-      - run: ./build/qemu-system-x86_64-unsigned -nographic -plugin ./build/contrib/plugins/libstoptrigger,icount=1000000 -plugin ./build/tests/tcg/plugins/libinsn -d plugin
+      - run: ./build/qemu-system-x86_64-unsigned -nographic -plugin ./build/contrib/plugins/libstoptrigger,icount=1000000 -plugin ./build/tests/tcg/plugins/libinsn -plugin ./build/contrib/plugins/libcpp -d plugin
 
   build-freebsd:
     needs: checkapply
@@ -250,7 +250,7 @@ jobs:
       - run: >
           podman run --pull newer --init --rm -it -v $(pwd):$(pwd) -w $(pwd)
           docker.io/pbolinaro/qemu-ci:debian
-          ./build/qemu-system-x86_64 -nographic -plugin ./build/contrib/plugins/libstoptrigger,icount=1000000 -plugin ./build/tests/tcg/plugins/libinsn -d plugin
+          ./build/qemu-system-x86_64 -nographic -plugin ./build/contrib/plugins/libstoptrigger,icount=1000000 -plugin ./build/tests/tcg/plugins/libinsn -plugin ./build/contrib/plugins/libcpp -d plugin
 
   build-static:
     needs: checkapply
