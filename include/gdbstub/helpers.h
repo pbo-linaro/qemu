@@ -12,13 +12,8 @@
 #ifndef _GDBSTUB_HELPERS_H_
 #define _GDBSTUB_HELPERS_H_
 
-#ifndef COMPILING_PER_TARGET
-#error "gdbstub helpers should only be included by target specific code"
-#endif
-
 #include "qemu/bswap.h"
 #include "qemu/target-info.h"
-#include "cpu-param.h"
 
 /*
  * The GDB remote protocol transfers values in target byte order. As
@@ -102,16 +97,40 @@ static inline uint8_t *gdb_get_reg_ptr(GByteArray *buf, int len)
     return buf->data + buf->len - len;
 }
 
-#if TARGET_LONG_BITS == 64
-#define gdb_get_regl(buf, val) gdb_get_reg64(buf, val)
-#define ldtul_p(addr) ldq_p(addr)
-#define ldtul_le_p(addr) ldq_le_p(addr)
-#define ldtul_be_p(addr) ldq_be_p(addr)
-#else
-#define gdb_get_regl(buf, val) gdb_get_reg32(buf, val)
-#define ldtul_p(addr) ldl_p(addr)
-#define ldtul_le_p(addr) ldl_le_p(addr)
-#define ldtul_be_p(addr) ldl_be_p(addr)
-#endif
+static inline uint64_t gdb_get_regl(GByteArray *buf, uint64_t val)
+{
+    if (target_long_bits() == 64) {
+        return gdb_get_reg64(buf, val);
+    } else {
+        return gdb_get_reg32(buf, val);
+    }
+}
+
+static inline uint64_t ldtul_p(const void *addr)
+{
+    if (target_long_bits() == 64) {
+        return ldq_p(addr);
+    } else {
+        return ldl_p(addr);
+    }
+}
+
+static inline uint64_t ldtul_le_p(const void *addr)
+{
+    if (target_long_bits() == 64) {
+        return ldq_le_p(addr);
+    } else {
+        return ldl_le_p(addr);
+    }
+}
+
+static inline uint64_t ldtul_be_p(const void *addr)
+{
+    if (target_long_bits() == 64) {
+        return ldq_be_p(addr);
+    } else {
+        return ldl_be_p(addr);
+    }
+}
 
 #endif /* _GDBSTUB_HELPERS_H_ */
