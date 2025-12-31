@@ -811,7 +811,6 @@ static int smmu_ptw_64_s2(SMMUState *bs, SMMUTransCfg *cfg,
                 baseaddr, ~indexmask);
         fprintf(stderr, "tsz=%d sl0=%d granule_sz=%d stride=%d level=%d\n",
                 cfg->s2cfg.tsz, cfg->s2cfg.sl0, granule_sz, stride, level);
-        g_assert_not_reached();
     }
 
     /* baseaddr &= ~indexmask; */
@@ -820,7 +819,6 @@ static int smmu_ptw_64_s2(SMMUState *bs, SMMUTransCfg *cfg,
     const uint64_t final_addr = (tablebase >> tsize) << tsize;
     if ((baseaddr & ~indexmask) != final_addr) {
         fprintf(stderr, "%"PRIx64" & %"PRIx64"\n", baseaddr, final_addr);
-        g_assert_not_reached();
     }
 
     /*
