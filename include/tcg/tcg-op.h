@@ -12,6 +12,34 @@
 #include "tcg/insn-start-words.h"
 #include "exec/target_long.h"
 
+#define tcgv_tl_temp(v)                     \
+    _Generic((v),                           \
+             TCGv_i32 : tcgv_i32_temp,      \
+             TCGv_i64 : tcgv_i64_temp)      \
+            (v)
+
+#define tcg_type(v)                         \
+    _Generic((v),                           \
+            TCGv_i32 : TCG_TYPE_I32,        \
+            TCGv_i64 : TCG_TYPE_I64)
+
+#define tcg_gen_qemu_ld_i32(v, a, i, m) \
+    tcg_gen_qemu_ld_i32_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a))
+#define tcg_gen_qemu_st_i32(v, a, i, m) \
+    tcg_gen_qemu_ld_i32_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a))
+
+#define tcg_gen_qemu_ld_i64(v, a, i, m) \
+    tcg_gen_qemu_ld_i64_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a))
+#define tcg_gen_qemu_st_i64(v, a, i, m) \
+    tcg_gen_qemu_ld_i64_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a))
+
+#define tcg_gen_qemu_ld_i128(v, a, i, m) \
+    tcg_gen_qemu_ld_i128_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a))
+#define tcg_gen_qemu_st_i128(v, a, i, m) \
+    tcg_gen_qemu_ld_i128_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a))
+
+#ifdef COMPILING_PER_TARGET
+
 #ifndef TARGET_LONG_BITS
 #error must include QEMU headers
 #endif
@@ -75,32 +103,6 @@ typedef TCGv_i64 TCGv;
 #else
 #error Unhandled TARGET_LONG_BITS value
 #endif
-
-#define tcgv_tl_temp(v)                     \
-    _Generic((v),                           \
-             TCGv_i32 : tcgv_i32_temp,      \
-             TCGv_i64 : tcgv_i64_temp)      \
-            (v)
-
-#define tcg_type(v)                         \
-    _Generic((v),                           \
-            TCGv_i32 : TCG_TYPE_I32,        \
-            TCGv_i64 : TCG_TYPE_I64)
-
-#define tcg_gen_qemu_ld_i32(v, a, i, m) \
-    tcg_gen_qemu_ld_i32_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a))
-#define tcg_gen_qemu_st_i32(v, a, i, m) \
-    tcg_gen_qemu_ld_i32_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a))
-
-#define tcg_gen_qemu_ld_i64(v, a, i, m) \
-    tcg_gen_qemu_ld_i64_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a))
-#define tcg_gen_qemu_st_i64(v, a, i, m) \
-    tcg_gen_qemu_ld_i64_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a))
-
-#define tcg_gen_qemu_ld_i128(v, a, i, m) \
-    tcg_gen_qemu_ld_i128_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a))
-#define tcg_gen_qemu_st_i128(v, a, i, m) \
-    tcg_gen_qemu_ld_i128_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a))
 
 #define DEF_ATOMIC2(N, S)                                               \
     static inline void N##_##S(TCGv_##S r, TCGv a, TCGv_##S v,          \
@@ -412,4 +414,7 @@ DEF_ATOMIC2(tcg_gen_atomic_umax_fetch, i64)
      :  (target_long)dup_const(VECE, C))
 
 #endif /* TARGET_LONG_BITS == 64 */
+
+#endif /* COMPILING_PER_TARGET */
+
 #endif /* TCG_TCG_OP_H */
