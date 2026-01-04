@@ -16,6 +16,14 @@
 #error must include QEMU headers
 #endif
 
+#if TARGET_LONG_BITS == 32
+# define TCG_TYPE_TL  TCG_TYPE_I32
+#elif TARGET_LONG_BITS == 64
+# define TCG_TYPE_TL  TCG_TYPE_I64
+#else
+# error
+#endif
+
 #if INSN_START_WORDS != 3
 # error Mismatch with insn-start-words.h
 #endif
