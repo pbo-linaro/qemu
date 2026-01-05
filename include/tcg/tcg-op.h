@@ -87,20 +87,41 @@ typedef TCGv_i64 TCGv;
             TCGv_i32 : TCG_TYPE_I32,        \
             TCGv_i64 : TCG_TYPE_I64)
 
-#define tcg_gen_qemu_ld_i32(v, a, i, m) \
-    tcg_gen_qemu_ld_i32_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a))
-#define tcg_gen_qemu_st_i32(v, a, i, m) \
-    tcg_gen_qemu_ld_i32_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a))
+static inline void
+tcg_gen_qemu_ld_i32(TCGv_i32 v, TCGv a, TCGArg i, MemOp m)
+{
+    tcg_gen_qemu_ld_i32_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a));
+}
 
-#define tcg_gen_qemu_ld_i64(v, a, i, m) \
-    tcg_gen_qemu_ld_i64_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a))
-#define tcg_gen_qemu_st_i64(v, a, i, m) \
-    tcg_gen_qemu_ld_i64_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a))
+static inline void
+tcg_gen_qemu_st_i32(TCGv_i32 v, TCGv a, TCGArg i, MemOp m)
+{
+    tcg_gen_qemu_st_i32_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a));
+}
 
-#define tcg_gen_qemu_ld_i128(v, a, i, m) \
-    tcg_gen_qemu_ld_i128_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a))
-#define tcg_gen_qemu_st_i128(v, a, i, m) \
-    tcg_gen_qemu_ld_i128_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a))
+static inline void
+tcg_gen_qemu_ld_i64(TCGv_i64 v, TCGv a, TCGArg i, MemOp m)
+{
+    tcg_gen_qemu_ld_i64_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a));
+}
+
+static inline void
+tcg_gen_qemu_st_i64(TCGv_i64 v, TCGv a, TCGArg i, MemOp m)
+{
+    tcg_gen_qemu_st_i64_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a));
+}
+
+static inline void
+tcg_gen_qemu_ld_i128(TCGv_i128 v, TCGv a, TCGArg i, MemOp m)
+{
+    tcg_gen_qemu_ld_i128_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a));
+}
+
+static inline void
+tcg_gen_qemu_st_i128(TCGv_i128 v, TCGv a, TCGArg i, MemOp m)
+{
+    tcg_gen_qemu_st_i128_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a));
+}
 
 #define DEF_ATOMIC2(N, S)                                               \
     static inline void N##_##S(TCGv_##S r, TCGv a, TCGv_##S v,          \
