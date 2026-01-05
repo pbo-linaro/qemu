@@ -16,6 +16,14 @@
 #error must include QEMU headers
 #endif
 
+#if TARGET_LONG_BITS == 32
+# define TCG_TYPE_TL  TCG_TYPE_I32
+#elif TARGET_LONG_BITS == 64
+# define TCG_TYPE_TL  TCG_TYPE_I64
+#else
+# error
+#endif
+
 #if INSN_START_WORDS != 3
 # error Mismatch with insn-start-words.h
 #endif
@@ -74,56 +82,51 @@ typedef TCGv_i64 TCGv;
              TCGv_i64 : tcgv_i64_temp)      \
             (v)
 
-#define tcg_type(v)                         \
-    _Generic((v),                           \
-            TCGv_i32 : TCG_TYPE_I32,        \
-            TCGv_i64 : TCG_TYPE_I64)
-
 static inline void
 tcg_gen_qemu_ld_i32(TCGv_i32 v, TCGv a, TCGArg i, MemOp m)
 {
-    tcg_gen_qemu_ld_i32_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a));
+    tcg_gen_qemu_ld_i32_chk(v, tcgv_tl_temp(a), i, m, TCG_TYPE_TL);
 }
 
 static inline void
 tcg_gen_qemu_st_i32(TCGv_i32 v, TCGv a, TCGArg i, MemOp m)
 {
-    tcg_gen_qemu_st_i32_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a));
+    tcg_gen_qemu_st_i32_chk(v, tcgv_tl_temp(a), i, m, TCG_TYPE_TL);
 }
 
 static inline void
 tcg_gen_qemu_ld_i64(TCGv_i64 v, TCGv a, TCGArg i, MemOp m)
 {
-    tcg_gen_qemu_ld_i64_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a));
+    tcg_gen_qemu_ld_i64_chk(v, tcgv_tl_temp(a), i, m, TCG_TYPE_TL);
 }
 
 static inline void
 tcg_gen_qemu_st_i64(TCGv_i64 v, TCGv a, TCGArg i, MemOp m)
 {
-    tcg_gen_qemu_st_i64_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a));
+    tcg_gen_qemu_st_i64_chk(v, tcgv_tl_temp(a), i, m, TCG_TYPE_TL);
 }
 
 static inline void
 tcg_gen_qemu_ld_i128(TCGv_i128 v, TCGv a, TCGArg i, MemOp m)
 {
-    tcg_gen_qemu_ld_i128_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a));
+    tcg_gen_qemu_ld_i128_chk(v, tcgv_tl_temp(a), i, m, TCG_TYPE_TL);
 }
 
 static inline void
 tcg_gen_qemu_st_i128(TCGv_i128 v, TCGv a, TCGArg i, MemOp m)
 {
-    tcg_gen_qemu_st_i128_chk(v, tcgv_tl_temp(a), i, m, tcg_type(a));
+    tcg_gen_qemu_st_i128_chk(v, tcgv_tl_temp(a), i, m, TCG_TYPE_TL);
 }
 
 #define DEF_ATOMIC2(N, S)                                               \
     static inline void N##_##S(TCGv_##S r, TCGv a, TCGv_##S v,          \
                                TCGArg i, MemOp m)                       \
-    { N##_##S##_chk(r, tcgv_tl_temp(a), v, i, m, tcg_type(a)); }
+    { N##_##S##_chk(r, tcgv_tl_temp(a), v, i, m, TCG_TYPE_TL); }
 
 #define DEF_ATOMIC3(N, S)                                               \
     static inline void N##_##S(TCGv_##S r, TCGv a, TCGv_##S o,          \
                                TCGv_##S n, TCGArg i, MemOp m)           \
-    { N##_##S##_chk(r, tcgv_tl_temp(a), o, n, i, m, tcg_type(a)); }
+    { N##_##S##_chk(r, tcgv_tl_temp(a), o, n, i, m, TCG_TYPE_TL); }
 
 DEF_ATOMIC3(tcg_gen_atomic_cmpxchg, i32)
 DEF_ATOMIC3(tcg_gen_atomic_cmpxchg, i64)
