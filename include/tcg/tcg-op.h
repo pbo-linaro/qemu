@@ -12,6 +12,8 @@
 #include "tcg/insn-start-words.h"
 #include "exec/target_long.h"
 
+#ifdef COMPILING_PER_TARGET
+
 #ifndef TARGET_LONG_BITS
 #error must include QEMU headers
 #endif
@@ -77,6 +79,8 @@ typedef TCGv_i64 TCGv;
 #else
 #error Unhandled TARGET_LONG_BITS value
 #endif
+
+#endif /* COMPILING_PER_TARGET */
 
 static inline void
 tcg_gen_qemu_ld_i32(TCGv_i32 v, TCGv a, TCGArg i, MemOp m)
@@ -174,6 +178,8 @@ DEF_ATOMIC2(tcg_gen_atomic_umax_fetch, i64)
 
 #undef DEF_ATOMIC2
 #undef DEF_ATOMIC3
+
+#ifdef COMPILING_PER_TARGET
 
 #if TARGET_LONG_BITS == 64
 #define tcg_gen_movi_tl tcg_gen_movi_i64
@@ -424,4 +430,7 @@ DEF_ATOMIC2(tcg_gen_atomic_umax_fetch, i64)
      :  (target_long)dup_const(VECE, C))
 
 #endif /* TARGET_LONG_BITS == 64 */
+
+#endif /* COMPILING_PER_TARGET */
+
 #endif /* TCG_TCG_OP_H */
