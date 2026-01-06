@@ -10,9 +10,10 @@
 
 #include "tcg/tcg-op-common.h"
 #include "tcg/insn-start-words.h"
-#include "exec/target_long.h"
 
 #ifdef COMPILING_PER_TARGET
+
+#include "exec/target_long.h"
 
 #ifndef TARGET_LONG_BITS
 #error must include QEMU headers
