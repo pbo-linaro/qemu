@@ -31,7 +31,6 @@ arm_ss.add(files(
   'translate-mve.c',
   'm_helper.c',
   'mve_helper.c',
-  'op_helper.c',
 ))
 
 arm_ss.add(when: 'TARGET_AARCH64', if_true: files(
@@ -68,6 +67,7 @@ arm_common_system_ss.add(
   'cpregs-at.c',
   'hflags.c',
   'neon_helper.c',
+  'op_helper.c',
   'psci.c',
   'tlb_helper.c',
   'tlb-insns.c',
@@ -79,6 +79,7 @@ arm_common_system_ss.add(
 arm_user_ss.add(files(
   'hflags.c',
   'neon_helper.c',
+  'op_helper.c',
   'tlb_helper.c',
   'translate-neon.c',
   'translate-vfp.c',
