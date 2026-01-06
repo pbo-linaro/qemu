@@ -20,6 +20,7 @@
  */
 #include "qemu/osdep.h"
 
+#define TARGET_ADDRESS_BITS 32
 #include "translate.h"
 #include "translate-a32.h"
 #include "qemu/log.h"
@@ -6863,11 +6864,9 @@ void arm_translate_code(CPUState *cpu, TranslationBlock *tb,
     if (EX_TBFLAG_AM32(tb_flags, THUMB)) {
         ops = &thumb_translator_ops;
     }
-#ifdef TARGET_AARCH64
     if (EX_TBFLAG_ANY(tb_flags, AARCH64_STATE)) {
         ops = &aarch64_translator_ops;
     }
-#endif
 
     translator_loop(cpu, tb, max_insns, pc, host_pc, ops, &dc.base);
 }
