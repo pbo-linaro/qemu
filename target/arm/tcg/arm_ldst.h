@@ -23,6 +23,25 @@
 #include "exec/translator.h"
 #include "qemu/bswap.h"
 
+#ifndef COMPILING_PER_TARGET
+static inline uint32_t
+translator_ldl_swap(CPUArchState *env, DisasContextBase *db,
+                    vaddr pc, bool do_swap)
+{
+    MemOp t = target_big_endian() ? MO_BE : MO_LE;
+    return translator_ldl_end(env, db, pc, t ^ (do_swap * MO_BSWAP));
+}
+
+static inline uint16_t
+translator_lduw_swap(CPUArchState *env, DisasContextBase *db,
+                     vaddr pc, bool do_swap)
+{
+    MemOp t = target_big_endian() ? MO_BE : MO_LE;
+    return translator_lduw_end(env, db, pc, t ^ (do_swap * MO_BSWAP));
+}
+
+#endif
+
 /* Load an instruction and return it in the standard little-endian order */
 static inline uint32_t arm_ldl_code(CPUARMState *env, DisasContextBase *s,
                                     uint64_t addr, bool sctlr_b)
