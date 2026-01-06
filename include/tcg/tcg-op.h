@@ -83,28 +83,15 @@ typedef TCGv_i64 TCGv;
 
 #else
 
-typedef enum TCGV_TYPE {
-    TCG_TCGV_TYPE_UNKNOWN = 0,
-    TCG_TCGV_TYPE_I32 = 10, /* make sure we don't conflict with TCG_TYPE_I* */
-    TCG_TCGV_TYPE_I64,
-} TCGV_TYPE;
-
-typedef struct TCGv
-{
-    TCGV_TYPE type;
-    union {
-        TCGv_i32 i32;
-        TCGv_i64 i64;
-    };
-} TCGv;
+typedef struct TCGv_i32_d *TCGv;
 
 static inline TCGTemp *tcgv_tl_temp(TCGv v)
 {
-    switch (v.type) {
-    case TCG_TCGV_TYPE_I32:
-        return tcgv_i32_temp(v.i32);
-    case TCG_TCGV_TYPE_I64:
-        return tcgv_i64_temp(v.i64);
+    switch (tcg_ctx->addr_type) {
+    case TCG_TYPE_I32:
+        return tcgv_i32_temp((TCGv_i32) v);
+    case TCG_TYPE_I64:
+        return tcgv_i64_temp((TCGv_i64) v);
     default:
         g_assert_not_reached();
     }
