@@ -10,6 +10,8 @@
 
 #include "tcg/tcg-op-gvec-common.h"
 
+#ifdef COMPILING_PER_TARGET
+
 #ifndef TARGET_LONG_BITS
 #error must include QEMU headers
 #endif
@@ -45,5 +47,7 @@
 #else
 # error
 #endif
+
+#endif /* COMPILING_PER_TARGET */
 
 #endif
