@@ -35,7 +35,6 @@ arm_ss.add(when: 'TARGET_AARCH64', if_false: files('stubs32.c'))
 arm_ss.add(files(
   'cpu32.c',
   'gengvec.c',
-  'translate.c',
   'translate-m-nocp.c',
   'translate-mve.c',
   'm_helper.c',
@@ -74,6 +73,7 @@ arm_common_system_ss.add(files(
   'psci.c',
   'tlb_helper.c',
   'tlb-insns.c',
+  'translate.c',
   'translate-neon.c',
   'translate-vfp.c',
   'vec_helper.c',
@@ -83,6 +83,7 @@ arm_user_ss.add(files(
   'hflags.c',
   'neon_helper.c',
   'tlb_helper.c',
+  'translate.c',
   'translate-neon.c',
   'translate-vfp.c',
   'vec_helper.c',

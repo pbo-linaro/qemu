@@ -97,6 +97,47 @@ static inline TCGTemp *tcgv_tl_temp(TCGv v)
     }
 }
 
+static inline TCGv tcg_temp_new(void)
+{
+    switch (tcg_ctx->addr_type) {
+    case TCG_TYPE_I32:
+        return (TCGv) tcg_temp_new_i32();
+    case TCG_TYPE_I64:
+        return (TCGv) tcg_temp_new_i64();
+    default:
+        g_assert_not_reached();
+    }
+}
+
+static inline void tcg_gen_extu_i32_tl(TCGv ret, TCGv_i32 arg)
+{
+    switch (tcg_ctx->addr_type) {
+    case TCG_TYPE_I32:
+        tcg_gen_mov_i32((TCGv_i32) ret, arg);
+        break;
+    case TCG_TYPE_I64:
+        tcg_gen_extu_i32_i64((TCGv_i64) ret, arg);
+        break;
+    default:
+        g_assert_not_reached();
+    }
+}
+
+static inline void tcg_gen_xori_tl(TCGv ret, TCGv arg1, int64_t arg2)
+{
+    switch (tcg_ctx->addr_type) {
+    case TCG_TYPE_I32:
+        tcg_debug_assert(arg2 <= INT32_MAX && arg2 >= INT32_MIN);
+        tcg_gen_xori_i32((TCGv_i32) ret, (TCGv_i32) arg1, arg2);
+        break;
+    case TCG_TYPE_I64:
+        tcg_gen_xori_i64((TCGv_i64) ret, (TCGv_i64) arg1, arg2);
+        break;
+    default:
+        g_assert_not_reached();
+    }
+}
+
 #define TCG_TYPE_TL target_long_bits() == 64 ? TCG_TYPE_I64: TCG_TYPE_I32
 
 #endif /* COMPILING_PER_TARGET */
