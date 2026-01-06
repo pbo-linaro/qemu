@@ -80,6 +80,37 @@ typedef TCGv_i64 TCGv;
 #error Unhandled TARGET_LONG_BITS value
 #endif
 
+#else
+
+typedef enum TCGV_TYPE {
+    TCG_TCGV_TYPE_UNKNOWN = 0,
+    TCG_TCGV_TYPE_I32 = 10, /* make sure we don't conflict with TCG_TYPE_I* */
+    TCG_TCGV_TYPE_I64,
+} TCGV_TYPE;
+
+typedef struct TCGv
+{
+    TCGV_TYPE type;
+    union {
+        TCGv_i32 i32;
+        TCGv_i64 i64;
+    };
+} TCGv;
+
+static inline TCGTemp *tcgv_tl_temp(TCGv v)
+{
+    switch (v.type) {
+    case TCG_TCGV_TYPE_I32:
+        return tcgv_i32_temp(v.i32);
+    case TCG_TCGV_TYPE_I64:
+        return tcgv_i64_temp(v.i64);
+    default:
+        g_assert_not_reached();
+    }
+}
+
+#define TCG_TYPE_TL target_long_bits() == 64 ? TCG_TYPE_I64: TCG_TYPE_I32
+
 #endif /* COMPILING_PER_TARGET */
 
 static inline void
