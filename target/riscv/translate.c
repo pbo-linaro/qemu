@@ -1356,7 +1356,7 @@ static void riscv_tr_insn_start(DisasContextBase *dcbase, CPUState *cpu)
         pc_next &= ~TARGET_PAGE_MASK;
     }
 
-    tcg_gen_insn_start(pc_next, 0, 0);
+    tcg_gen_insn_start2(pc_next, 0, 0);
     ctx->insn_start_updated = false;
 }
 
