@@ -61,7 +61,7 @@
  */
 
 #include "qemu/osdep.h"
-#include "hw/pci/msi.h"
+#include "hw/pci/msix.h"
 #include "hw/pci/pci.h"
 #include "migration/vmstate.h"
 #include "qemu/module.h"
@@ -72,7 +72,6 @@
 #include "ahci-internal.h"
 #include "system/spdm-socket.h"
 
-#define ICH9_MSI_CAP_OFFSET     0x80
 #define ICH9_SATA_CAP_OFFSET    0xA8
 
 #define ICH9_IDP_BAR            4
@@ -97,15 +96,8 @@ static const Property ich_props[] = {
 
 static void pci_ich9_ahci_update_irq(void *opaque, int irq_num, int level)
 {
-    PCIDevice *pci_dev = opaque;
-
-    if (msi_enabled(pci_dev)) {
-        if (level) {
-            msi_notify(pci_dev, 0);
-        }
-    } else {
-        pci_set_irq(pci_dev, level);
-    }
+    PCIDevice *pdev = opaque;
+    msix_notify(pdev, 0);
 }
 
 static void pci_ich9_reset(DeviceState *dev)
@@ -152,9 +144,8 @@ static void pci_ich9_ahci_realize(PCIDevice *dev, Error **errp)
     int sata_cap_offset;
     uint8_t *sata_cap;
     d = ICH9_AHCI(dev);
-    int ret;
 
-    d->ahci.ports = 6;
+    d->ahci.ports = 1;
     ahci_realize(&d->ahci, DEVICE(dev), pci_get_address_space(dev));
 
     pci_config_set_prog_interface(dev->config, AHCI_PROGMODE_MAJOR_REV_1);
@@ -165,6 +156,12 @@ static void pci_ich9_ahci_realize(PCIDevice *dev, Error **errp)
 
     /* XXX Software should program this register */
     dev->config[0x90]   = 1 << 6; /* Address Map Register - AHCI mode */
+
+    d->vectors = 64;
+    msix_init_exclusive_bar(PCI_DEVICE(d), d->vectors, 3, errp);
+    for (int i = 0; i < d->vectors; i++) {
+        msix_vector_use(dev, i);
+    }
 
     pci_register_bar(dev, ICH9_IDP_BAR, PCI_BASE_ADDRESS_SPACE_IO,
                      &d->ahci.idp);
@@ -185,14 +182,6 @@ static void pci_ich9_ahci_realize(PCIDevice *dev, Error **errp)
     pci_set_long(sata_cap + SATA_CAP_BAR,
                  (ICH9_IDP_BAR + 0x4) | (ICH9_IDP_INDEX_LOG2 << 4));
     d->ahci.idp_offset = ICH9_IDP_INDEX;
-
-    /* Although the AHCI 1.3 specification states that the first capability
-     * should be PMCAP, the Intel ICH9 data sheet specifies that the ICH9
-     * AHCI device puts the MSI capability first, pointing to 0x80. */
-    ret = msi_init(dev, ICH9_MSI_CAP_OFFSET, 1, true, false, NULL);
-    /* Any error other than -ENOTSUP(board's MSI support is broken)
-     * is a programming error.  Fall back to INTx silently on -ENOTSUP */
-    assert(!ret || ret == -ENOTSUP);
 
     uint16_t cap_offset = PCI_CONFIG_SPACE_SIZE;
 
@@ -219,7 +208,7 @@ static void pci_ich9_uninit(PCIDevice *dev)
     AHCIPCIState *d;
     d = ICH9_AHCI(dev);
 
-    msi_uninit(dev);
+    msix_uninit_exclusive_bar(dev);
     ahci_uninit(&d->ahci);
 }
 

@@ -16,7 +16,7 @@ OBJECT_DECLARE_SIMPLE_TYPE(AHCIPCIState, ICH9_AHCI)
 
 struct AHCIPCIState {
     PCIDevice parent_obj;
-
+    int vectors;
     AHCIState ahci;
     IRQState irq;
 };
