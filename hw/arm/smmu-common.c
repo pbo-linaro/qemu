@@ -739,7 +739,6 @@ static int smmu_ptw_64_s2(SMMUState *bs, SMMUTransCfg *cfg,
                           dma_addr_t ipa, IOMMUAccessFlags perm,
                           SMMUTLBEntry *tlbe, SMMUPTWEventInfo *info)
 {
-
     /*
      * // AArch64.S2TTBaseAddress
      * // Input Address size
@@ -847,6 +846,11 @@ static int smmu_ptw_64_s2(SMMUState *bs, SMMUTransCfg *cfg,
         if (is_invalid_pte(pte) || is_reserved_pte(pte, level)) {
             trace_smmu_ptw_invalid_pte(stage, level, baseaddr,
                                        pte_addr, offset, pte);
+            if (ipa == 0x8000040) {
+                printf("FAULTY ACCESS\n");
+                print_stack_trace(stdout);
+            }
+
             break;
         }
 
