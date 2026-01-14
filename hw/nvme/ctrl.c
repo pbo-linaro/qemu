@@ -9050,6 +9050,11 @@ static bool nvme_init_pci(NvmeCtrl *n, PCIDevice *pci_dev, Error **errp)
         default:
             return false;
         }
+
+        doe_offset += PCI_DOE_SIZEOF;
+        pcie_ide_init(pci_dev, doe_offset);
+        doe_offset += PCI_IDE_SIZEOF;
+        pcie_cap_tee_init(pci_dev);
     }
 
     if (n->params.cmb_size_mb) {
