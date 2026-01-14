@@ -151,6 +151,7 @@ static MSIMessage msi_prepare_message(PCIDevice *dev, unsigned int vector)
     } else {
         msg.address = pci_get_long(dev->config + msi_address_lo_off(dev));
     }
+    printf("MSI_PREPARE_MESSAGE msg.address=%"PRIx64"\n", msg.address);
 
     /* upper bit 31:16 is zero */
     msg.data = pci_get_word(dev->config + msi_data_off(dev, msi64bit));
