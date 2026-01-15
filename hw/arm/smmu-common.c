@@ -796,12 +796,23 @@ static int smmu_ptw_64_s2(SMMUState *bs, SMMUTransCfg *cfg,
 
     g_assert(cfg->s2cfg.eff_ps != 0b110);
 
+    printf("BLOP s2.vttb=%"PRIx64"\n", cfg->s2cfg.vttb);
+    static uint64_t first_s2cfg_vttb;
+    if (first_s2cfg_vttb == 0) {
+        first_s2cfg_vttb = cfg->s2cfg.vttb;
+    }
+    uint64_t ttb = cfg->s2cfg.vttb;
+    if (ipa == 0x8000040) {
+        printf("BLOP ------\n");
+    }
+    printf("BLOP using ttb=%"PRIx64"\n", ttb);
+
     int idx = pgd_concat_idx(level, granule_sz, ipa);
     /*
      * Get the ttb from concatenated structure.
      * The offset is the idx * size of each ttb(number of ptes * (sizeof(pte))
      */
-    uint64_t baseaddr = extract64(cfg->s2cfg.vttb, 0, cfg->s2cfg.eff_ps) +
+    uint64_t baseaddr = extract64(ttb, 0, cfg->s2cfg.eff_ps) +
                                   (1 << stride) * idx * sizeof(uint64_t);
     dma_addr_t indexmask = VMSA_IDXMSK(inputsize, stride, level);
 
@@ -814,7 +825,7 @@ static int smmu_ptw_64_s2(SMMUState *bs, SMMUTransCfg *cfg,
 
     /* baseaddr &= ~indexmask; */
 
-    const uint64_t tablebase = cfg->s2cfg.vttb;
+    const uint64_t tablebase = ttb;
     const uint64_t final_addr = (tablebase >> tsize) << tsize;
     if ((baseaddr & ~indexmask) != final_addr) {
         fprintf(stderr, "%"PRIx64" & %"PRIx64"\n", baseaddr, final_addr);
