@@ -739,7 +739,6 @@ static int smmu_ptw_64_s2(SMMUState *bs, SMMUTransCfg *cfg,
                           dma_addr_t ipa, IOMMUAccessFlags perm,
                           SMMUTLBEntry *tlbe, SMMUPTWEventInfo *info)
 {
-    static SMMUTLBEntry tlb_special;
     /*
      * // AArch64.S2TTBaseAddress
      * // Input Address size
@@ -861,9 +860,6 @@ static int smmu_ptw_64_s2(SMMUState *bs, SMMUTransCfg *cfg,
             if (ipa == 0x8000040) {
                 printf("FAULTY ACCESS\n");
                 print_stack_trace(stdout);
-                printf("force previous tlbe\n");
-                *tlbe = tlb_special;
-                return 0;
             }
 
             break;
@@ -920,11 +916,6 @@ static int smmu_ptw_64_s2(SMMUState *bs, SMMUTransCfg *cfg,
         tlbe->entry.perm = tlbe->parent_perm;
         tlbe->level = level;
         tlbe->granule = granule_sz;
-
-        if (ipa == 0x8000040) {
-            tlb_special = *tlbe;
-            printf("BLOP SAVE tlbe 0x8000040\n");
-        }
         return 0;
     }
     info->type = SMMU_PTW_ERR_TRANSLATION;
