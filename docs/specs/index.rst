@@ -39,4 +39,3 @@ guest hardware that is specific to QEMU.
    riscv-iommu
    riscv-aia
    aspeed-intc
-   iommu-testdev
