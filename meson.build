@@ -351,7 +351,7 @@ qemu_common_flags = [
   '-D_GNU_SOURCE', '-D_FILE_OFFSET_BITS=64', '-D_LARGEFILE_SOURCE',
   '-fno-strict-aliasing', '-fno-common', '-fwrapv' ]
 qemu_cflags = []
-qemu_ldflags = []
+qemu_ldflags = ['-s', 'ASYNCIFY', '--js-library=/builddeps/node_modules/xterm-pty/emscripten-pty.js']
 
 if host_os == 'darwin'
   # Disable attempts to use ObjectiveC features in os/object.h since they

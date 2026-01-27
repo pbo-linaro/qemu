@@ -148,3 +148,6 @@ RUN meson install -C _build
 FROM build-base-common
 COPY --from=glib-dev /builddeps/ /builddeps/
 COPY --from=pixman-dev /builddeps/ /builddeps/
+
+WORKDIR /builddeps/
+RUN npm i xterm-pty@v0.10.1
