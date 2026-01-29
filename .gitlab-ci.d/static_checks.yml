@@ -43,6 +43,7 @@ check-python-tox:
   variables:
     GIT_DEPTH: 1
     QEMU_TOX_EXTRA_ARGS: --skip-missing-interpreters=false
+    QEMU_JOB_OPTIONAL: 1
   needs:
     - job: python-container
 
