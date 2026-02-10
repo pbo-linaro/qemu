@@ -255,6 +255,8 @@ void virtio_cleanup(VirtIODevice *vdev);
 
 void virtio_error(VirtIODevice *vdev, const char *fmt, ...) G_GNUC_PRINTF(2, 3);
 
+enum virtio_device_endian virtio_current_cpu_endian(void);
+
 /* Set the child bus name. */
 void virtio_device_set_child_bus_name(VirtIODevice *vdev, char *bus_name);
 
@@ -480,12 +482,10 @@ static inline bool virtio_vdev_is_legacy(const VirtIODevice *vdev)
 
 static inline bool virtio_is_big_endian(VirtIODevice *vdev)
 {
-    if (virtio_vdev_is_legacy(vdev)) {
-        assert(vdev->device_endian != VIRTIO_DEVICE_ENDIAN_UNKNOWN);
-        return vdev->device_endian == VIRTIO_DEVICE_ENDIAN_BIG;
+    if (unlikely(vdev->device_endian == VIRTIO_DEVICE_ENDIAN_UNKNOWN)) {
+        vdev->device_endian = virtio_current_cpu_endian();
     }
-    /* Devices conforming to VIRTIO 1.0 or later are always LE. */
-    return false;
+    return vdev->device_endian == VIRTIO_DEVICE_ENDIAN_BIG;
 }
 
 /**

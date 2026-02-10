@@ -2306,17 +2306,9 @@ int virtio_set_status(VirtIODevice *vdev, uint8_t val)
     return ret;
 }
 
-static enum virtio_device_endian virtio_default_endian(void)
+enum virtio_device_endian virtio_current_cpu_endian(void)
 {
-    if (target_big_endian()) {
-        return VIRTIO_DEVICE_ENDIAN_BIG;
-    } else {
-        return VIRTIO_DEVICE_ENDIAN_LITTLE;
-    }
-}
-
-static enum virtio_device_endian virtio_current_cpu_endian(void)
-{
+    g_assert(current_cpu);
     if (cpu_virtio_is_big_endian(current_cpu)) {
         return VIRTIO_DEVICE_ENDIAN_BIG;
     } else {
@@ -2748,18 +2740,6 @@ void virtio_notify_config(VirtIODevice *vdev)
     }
 }
 
-static bool virtio_device_endian_needed(void *opaque)
-{
-    VirtIODevice *vdev = opaque;
-
-    assert(vdev->device_endian != VIRTIO_DEVICE_ENDIAN_UNKNOWN);
-    if (virtio_vdev_is_legacy(vdev)) {
-        return vdev->device_endian != virtio_default_endian();
-    }
-    /* Devices conforming to VIRTIO 1.0 or later are always LE. */
-    return vdev->device_endian != VIRTIO_DEVICE_ENDIAN_LITTLE;
-}
-
 static bool virtio_64bit_features_needed(void *opaque)
 {
     VirtIODevice *vdev = opaque;
@@ -2946,17 +2926,6 @@ static const VMStateDescription vmstate_virtio_extra_state = {
     }
 };
 
-static const VMStateDescription vmstate_virtio_device_endian = {
-    .name = "virtio/device_endian",
-    .version_id = 1,
-    .minimum_version_id = 1,
-    .needed = &virtio_device_endian_needed,
-    .fields = (const VMStateField[]) {
-        VMSTATE_UINT8(device_endian, VirtIODevice),
-        VMSTATE_END_OF_LIST()
-    }
-};
-
 static const VMStateDescription vmstate_virtio_64bit_features = {
     .name = "virtio/64bit_features",
     .version_id = 1,
@@ -3033,7 +3002,6 @@ static const VMStateDescription vmstate_virtio = {
         VMSTATE_END_OF_LIST()
     },
     .subsections = (const VMStateDescription * const []) {
-        &vmstate_virtio_device_endian,
         &vmstate_virtio_128bit_features,
         &vmstate_virtio_64bit_features,
         &vmstate_virtio_virtqueues,
@@ -3154,6 +3122,17 @@ static int virtio_set_features_nocheck(VirtIODevice *vdev, const uint64_t *val)
     }
 
     virtio_features_copy(vdev->guest_features_ex, tmp);
+
+    if (virtio_vdev_is_modern(vdev)) {
+        vdev->device_endian = VIRTIO_DEVICE_ENDIAN_LITTLE;
+    } else {
+        if (current_cpu) {
+            vdev->device_endian = virtio_current_cpu_endian();
+        } else {
+            vdev->device_endian = VIRTIO_DEVICE_ENDIAN_UNKNOWN;
+        }
+    }
+
     return bad ? -1 : 0;
 }
 
@@ -3241,15 +3220,9 @@ void virtio_reset(void *opaque)
     VirtioDeviceClass *k = VIRTIO_DEVICE_GET_CLASS(vdev);
     uint64_t features[VIRTIO_FEATURES_NU64S];
     int i;
+    vdev->device_endian = VIRTIO_DEVICE_ENDIAN_UNKNOWN;
 
     virtio_set_status(vdev, 0);
-    if (current_cpu) {
-        /* Guest initiated reset */
-        vdev->device_endian = virtio_current_cpu_endian();
-    } else {
-        /* System reset */
-        vdev->device_endian = virtio_default_endian();
-    }
 
     if (k->get_vhost) {
         struct vhost_dev *hdev = k->get_vhost(vdev);
@@ -3322,12 +3295,6 @@ virtio_load(VirtIODevice *vdev, QEMUFile *f, int version_id)
     VirtioBusClass *k = VIRTIO_BUS_GET_CLASS(qbus);
     VirtioDeviceClass *vdc = VIRTIO_DEVICE_GET_CLASS(vdev);
     Error *local_err = NULL;
-
-    /*
-     * We poison the endianness to ensure it does not get used before
-     * subsections have been loaded.
-     */
-    vdev->device_endian = VIRTIO_DEVICE_ENDIAN_UNKNOWN;
 
     if (k->load_config) {
         ret = k->load_config(qbus->parent, f);
@@ -3426,10 +3393,6 @@ virtio_load(VirtIODevice *vdev, QEMUFile *f, int version_id)
     if (ret) {
         error_report_err(local_err);
         return ret;
-    }
-
-    if (vdev->device_endian == VIRTIO_DEVICE_ENDIAN_UNKNOWN) {
-        vdev->device_endian = virtio_default_endian();
     }
 
     /*
@@ -3599,7 +3562,6 @@ void virtio_init(VirtIODevice *vdev, uint16_t device_id, size_t config_size)
     }
     vdev->vmstate = qdev_add_vm_change_state_handler(DEVICE(vdev),
             NULL, virtio_vmstate_change, vdev);
-    vdev->device_endian = virtio_default_endian();
     vdev->use_guest_notifier_mask = true;
 }
 
@@ -4045,6 +4007,7 @@ static void virtio_device_realize(DeviceState *dev, Error **errp)
     VirtIODevice *vdev = VIRTIO_DEVICE(dev);
     VirtioDeviceClass *vdc = VIRTIO_DEVICE_GET_CLASS(dev);
     Error *err = NULL;
+    vdev->device_endian = VIRTIO_DEVICE_ENDIAN_UNKNOWN;
 
     /* Devices should either use vmsd or the load/save methods */
     assert(!vdc->vmsd || !vdc->load);
