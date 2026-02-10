@@ -480,7 +480,7 @@ static inline bool virtio_vdev_is_legacy(const VirtIODevice *vdev)
     return !virtio_vdev_is_modern(vdev);
 }
 
-static inline bool virtio_is_big_endian(VirtIODevice *vdev)
+static inline bool virtio_vdev_is_big_endian(VirtIODevice *vdev)
 {
     if (unlikely(vdev->device_endian == VIRTIO_DEVICE_ENDIAN_UNKNOWN)) {
         vdev->device_endian = virtio_current_cpu_endian();
