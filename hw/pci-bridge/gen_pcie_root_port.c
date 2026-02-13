@@ -123,7 +123,6 @@ static void gen_rp_realize(DeviceState *dev, Error **errp)
      * 0x000C RMEDA_CTL1 See B3.2.6.2.4 RME-DA Control register 1
      * 0x0010 RMEDA_CTL2 See B3.2.6.2.5 RME-DA Control register 2
      */
-    /* needs to come first, or RMM does not iterate on other capabilities */
     pcie_add_capability(d, PCI_EXT_CAP_ID_DVSEC, 1, offset, 0x14);
     const uint32_t header1 = 0x010013b5;
     const uint32_t header2 = 0xFF01;
